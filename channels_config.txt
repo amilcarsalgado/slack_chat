@@ -1,0 +1,8 @@
+#gcc_swarming_6500_all
+#gcc_swarming_nms_all
+#gcc_swarming_rls_all
+#gcc_swarming_rsp_all
+#rsc-na-ncp
+#gcc-subsea-solutions
+#gcc_apac_cpo_rsc-ats-huddle
+#gcc_apac_ncp_rsc-ats-team
