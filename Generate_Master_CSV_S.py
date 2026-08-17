@@ -12,7 +12,7 @@ from slack_sdk.errors import SlackApiError
 from dotenv import load_dotenv
 
 # ---------------------------------------------------------
-# CONFIGURATION 17Aug2026 ___
+# CONFIGURATION 17Aug2026 ____
 # ---------------------------------------------------------
 load_dotenv()
 SLACK_TOKEN = os.getenv("SLACK_TOKEN")
