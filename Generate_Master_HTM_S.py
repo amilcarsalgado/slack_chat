@@ -1,13 +1,14 @@
-import os
 import glob
 import html
+import os
 import pathlib
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 # ==============================================================================
-# CONFIGURATION 17Aug2026 !
+# CONFIGURATION 18Aug2026 - 10:42 AM
 # ==============================================================================
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_DIR = os.path.join(_SCRIPT_DIR, "XLS_files")
@@ -65,52 +66,128 @@ CSS_STYLE = """
 
 
 def build_accountability_charts(df_summary):
-    region_order = df_summary.groupby('Region')['Alert Count'].sum().sort_values(ascending=False).index
+    region_order = (
+        df_summary.groupby("Region")["Alert Count"]
+        .sum()
+        .sort_values(ascending=False)
+        .index
+    )
     fig_stacked = go.Figure()
-    channels = df_summary['Channel_Source'].unique()
-    colors = ['#2C3E50', '#34495E', '#7F8C8D', '#95A5A6', '#BDC3C7', '#3498DB', '#2980B9']
+    channels = df_summary["Channel_Source"].unique()
+    colors = [
+        "#2C3E50",
+        "#34495E",
+        "#7F8C8D",
+        "#95A5A6",
+        "#BDC3C7",
+        "#3498DB",
+        "#2980B9",
+    ]
 
     for i, channel in enumerate(channels):
-        df_ch = df_summary[df_summary['Channel_Source'] == channel]
-        counts = [df_ch[df_ch['Region'] == r]['Alert Count'].sum() for r in region_order]
-        fig_stacked.add_trace(go.Bar(x=region_order, y=counts, name=channel, marker_color=colors[i % len(colors)]))
+        df_ch = df_summary[df_summary["Channel_Source"] == channel]
+        counts = [
+            df_ch[df_ch["Region"] == r]["Alert Count"].sum() for r in region_order
+        ]
+        fig_stacked.add_trace(
+            go.Bar(
+                x=region_order,
+                y=counts,
+                name=channel,
+                marker_color=colors[i % len(colors)],
+            )
+        )
 
     fig_stacked.update_layout(
-        title="Unanswered Alerts by Region", title_font=dict(size=18, color='#2C3E50'),
-        template='plotly_white', height=500, barmode='stack', margin=dict(l=60, r=20, t=60, b=120),
-        yaxis_title="Total Unanswered Alerts", hoverlabel=dict(namelength=-1), hovermode="x unified",
-        legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5, itemwidth=80)
+        title="Unanswered Alerts by Region",
+        title_font=dict(size=18, color="#2C3E50"),
+        template="plotly_white",
+        height=500,
+        barmode="stack",
+        margin=dict(l=60, r=20, t=60, b=120),
+        yaxis_title="Total Unanswered Alerts",
+        hoverlabel=dict(namelength=-1),
+        hovermode="x unified",
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.2,
+            xanchor="center",
+            x=0.5,
+            itemwidth=80,
+        ),
     )
 
-    df_alerts = df_summary.groupby('Alert')['Alert Count'].sum().reset_index().sort_values(by='Alert Count').tail(10)
-    df_alerts['Alert_Short'] = df_alerts['Alert'].apply(lambda x: (x[:45] + '...') if len(x) > 48 else x)
+    df_alerts = (
+        df_summary.groupby("Alert")["Alert Count"]
+        .sum()
+        .reset_index()
+        .sort_values(by="Alert Count")
+        .tail(10)
+    )
+    df_alerts["Alert_Short"] = df_alerts["Alert"].apply(
+        lambda x: (x[:45] + "...") if len(x) > 48 else x
+    )
 
-    fig_alerts = go.Figure(go.Bar(x=df_alerts['Alert Count'], y=df_alerts['Alert_Short'], orientation='h',
-                                  marker_color='#3498DB', text=df_alerts['Alert Count'], textposition='auto',
-                                  hovertext=df_alerts['Alert']))
-    fig_alerts.update_layout(title="Top 10 Most Frequent Alert Types", title_font=dict(size=18),
-                             template='plotly_white',
-                             height=450, margin=dict(l=160, r=40, t=60, b=60), xaxis_title="Alert Volume",
-                             hoverlabel=dict(namelength=-1))
+    fig_alerts = go.Figure(
+        go.Bar(
+            x=df_alerts["Alert Count"],
+            y=df_alerts["Alert_Short"],
+            orientation="h",
+            marker_color="#3498DB",
+            text=df_alerts["Alert Count"],
+            textposition="auto",
+            hovertext=df_alerts["Alert"],
+        )
+    )
+    fig_alerts.update_layout(
+        title="Top 10 Most Frequent Alert Types",
+        title_font=dict(size=18),
+        template="plotly_white",
+        height=450,
+        margin=dict(l=160, r=40, t=60, b=60),
+        xaxis_title="Alert Volume",
+        hoverlabel=dict(namelength=-1),
+    )
 
-    return fig_stacked.to_html(full_html=False, include_plotlyjs=True), fig_alerts.to_html(full_html=False,
-                                                                                           include_plotlyjs=False)
+    return fig_stacked.to_html(
+        full_html=False, include_plotlyjs=True
+    ), fig_alerts.to_html(full_html=False, include_plotlyjs=False)
 
 
 def generate_index_dashboard(df_summary):
-    total_alerts = df_summary['Alert Count'].sum()
-    worst_region = df_summary.groupby('Region')['Alert Count'].sum().idxmax() if total_alerts > 0 else "N/A"
-    worst_channel = df_summary.groupby('Channel_Source')['Alert Count'].sum().idxmax() if total_alerts > 0 else "N/A"
-    worst_alert = df_summary.groupby('Alert')['Alert Count'].sum().idxmax() if total_alerts > 0 else "N/A"
+    total_alerts = df_summary["Alert Count"].sum()
+    worst_region = (
+        df_summary.groupby("Region")["Alert Count"].sum().idxmax()
+        if total_alerts > 0
+        else "N/A"
+    )
+    worst_channel = (
+        df_summary.groupby("Channel_Source")["Alert Count"].sum().idxmax()
+        if total_alerts > 0
+        else "N/A"
+    )
+    worst_alert = (
+        df_summary.groupby("Alert")["Alert Count"].sum().idxmax()
+        if total_alerts > 0
+        else "N/A"
+    )
 
     chart_stacked, chart_alerts = build_accountability_charts(df_summary)
 
     wall_html = ""
-    for region, total in df_summary.groupby('Region')['Alert Count'].sum().sort_values(ascending=False).items():
+    for region, total in (
+        df_summary.groupby("Region")["Alert Count"]
+        .sum()
+        .sort_values(ascending=False)
+        .items()
+    ):
         rows = "".join([
-                           f"<tr><td>{html.escape(str(r['Channel_Source']))}</td><td>{html.escape(str(r['Alert']))}</td><td class='count-col'>{r['Alert Count']}</td></tr>"
-                           for _, r in df_summary[df_summary['Region'] == region].sort_values('Alert Count',
-                                                                                              ascending=False).iterrows()])
+            f"<tr><td>{html.escape(str(r['Channel_Source']))}</td><td>{html.escape(str(r['Alert']))}</td><td class='count-col'>{r['Alert Count']}</td></tr>"
+            for _, r in df_summary[df_summary["Region"] == region]
+            .sort_values("Alert Count", ascending=False)
+            .iterrows()
+        ])
         wall_html += f"<div class='region-section'><div class='region-header'><h2>{html.escape(str(region))}</h2><div class='region-total'>{total} Unanswered</div></div><table><thead><tr><th>Channel</th><th>Alert Type</th><th class='count-col'>Count</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
     html_out = f"""
@@ -135,44 +212,122 @@ def generate_index_dashboard(df_summary):
         </div>
     </body></html>
     """
-    with open(safe_output_path(OUTPUT_DIR, "index.html"), "w", encoding="utf-8") as f: f.write(html_out)
+    with open(
+        safe_output_path(OUTPUT_DIR, "index.html"), "w", encoding="utf-8"
+    ) as f:
+        f.write(html_out)
 
 
 def generate_timeline_dashboard(df_raw, df_shift_dist, df_weekday_dist):
-    df_qu = df_raw[df_raw['Alert'].str.contains("Queue Unstaffed", na=False, case=False)].copy()
+    df_qu = df_raw[
+        df_raw["Alert"].str.contains("Queue Unstaffed", na=False, case=False)
+    ].copy()
 
     if df_qu.empty:
         html_out = f"<!DOCTYPE html><html><head><title>Timeline</title>{CSS_STYLE}</head><body><div class='header'><h1>Automated Alerts Dashboard</h1><div class='nav-tabs'><a href='index.html'>Dashboard</a><a href='qu_timeline.html' class='active'>Queue Unstaffed FTS Timeline</a></div></div><div class='container'><h2>No Queue Unstaffed data available to plot.</h2></div></body></html>"
-        with open(safe_output_path(OUTPUT_DIR, "qu_timeline.html"), "w", encoding="utf-8") as f: f.write(html_out)
+        with open(
+            safe_output_path(OUTPUT_DIR, "qu_timeline.html"),
+            "w",
+            encoding="utf-8",
+        ) as f:
+            f.write(html_out)
         return
 
-    # --- PART 1: INTRA-SHIFT HOURLY DISTRIBUTION ---
-    regions = ['India', 'EMEA', 'NA', 'Manila']
-    shift_colors = {'Manila': '#E8DAEF', 'India': '#D6EAF8', 'EMEA': '#D5F5E3', 'NA': '#FDEBD0'}
+    # --- PART 1: INTRA-SHIFT 10-MINUTE DISTRIBUTION ---
+    regions = ["India", "EMEA", "NA", "Manila"]
+    shift_colors = {
+        "Manila": "#E8DAEF",
+        "India": "#D6EAF8",
+        "EMEA": "#D5F5E3",
+        "NA": "#FDEBD0",
+    }
     dist_html_blocks = ""
     plotly_included = False
 
+    # 36 standard 10-min interval reference grid
+    all_intervals_df = pd.DataFrame({
+        "Shift_Interval_10m": range(1, 37),
+        "Interval_Label": [
+            f"{h}h {m:02d}m - {h if m < 50 else h + 1}h {(m + 10) % 60:02d}m"
+            for h in range(6)
+            for m in range(0, 60, 10)
+        ],
+    })
+
+    # Ticks aligned to hour marks (Interval 1 = 0h, 7 = 1h, 13 = 2h, 19 = 3h, 25 = 4h, 31 = 5h, 36 = 6h)
+    tick_vals = [1, 7, 13, 19, 25, 31, 36]
+    tick_texts = ["0h", "1h", "2h", "3h", "4h", "5h", "6h"]
+
     for r in regions:
-        df_r = df_shift_dist[df_shift_dist['Region'] == r]
-        if df_r.empty: continue
+        df_r = df_shift_dist[df_shift_dist["Region"] == r]
+        if df_r.empty:
+            continue
+
+        # Merge with 36-bin template to ensure empty intervals are maintained
+        if "Shift_Interval_10m" in df_r.columns:
+            grid_r = all_intervals_df.merge(
+                df_r, on="Shift_Interval_10m", how="left"
+            )
+            grid_r["Percent_of_Shift"] = grid_r["Percent_of_Shift"].fillna(0.0)
+            grid_r["QU_Count"] = grid_r["QU_Count"].fillna(0).astype(int)
+            x_col = grid_r["Shift_Interval_10m"]
+            y_col = grid_r["Percent_of_Shift"]
+            custom_data = np.stack(
+                (grid_r["Interval_Label_x"], grid_r["QU_Count"]), axis=-1
+            )
+            hover_template = "<b>Interval:</b> %{customdata[0]}<br><b>Percentage:</b> %{y:.1f}%<br><b>Alerts:</b> %{customdata[1]}<extra></extra>"
+            max_y = (
+                max(grid_r["Percent_of_Shift"]) * 1.2
+                if max(grid_r["Percent_of_Shift"]) > 0
+                else 10
+            )
+        else:
+            x_col = df_r["Shift_Hour"]
+            y_col = df_r["Percent_of_Shift"]
+            custom_data = df_r["QU_Count"]
+            hover_template = "Shift Hour: %{x}<br>Percentage: %{y}%<br>Raw Count: %{customdata}<extra></extra>"
+            max_y = (
+                max(df_r["Percent_of_Shift"]) * 1.2
+                if max(df_r["Percent_of_Shift"]) > 0
+                else 10
+            )
 
         fig_r = go.Figure()
         color = shift_colors[r]
-        line_color = '#2C3E50'
+        line_color = "#2C3E50"
 
-        fig_r.add_trace(go.Bar(
-            x=df_r['Shift_Hour'], y=df_r['Percent_of_Shift'], marker_color=color, marker_line_color=line_color,
-            marker_line_width=1.5, text=df_r['Percent_of_Shift'].apply(lambda x: f"{x}%"), textposition='outside',
-            hovertemplate="Shift Hour: %{x}<br>Percentage: %{y}%<br>Raw Count: %{customdata}<extra></extra>",
-            customdata=df_r['QU_Count']
-        ))
+        fig_r.add_trace(
+            go.Bar(
+                x=x_col,
+                y=y_col,
+                marker_color=color,
+                marker_line_color=line_color,
+                marker_line_width=1.1,
+                hovertemplate=hover_template,
+                customdata=custom_data,
+            )
+        )
 
         fig_r.update_layout(
-            title=f"{r} - Distribution", title_font=dict(size=16, color='#2C3E50'), template='plotly_white', height=300,
+            title=f"{r} - Distribution",
+            title_font=dict(size=16, color="#2C3E50"),
+            template="plotly_white",
+            height=300,
             margin=dict(l=40, r=20, t=50, b=40),
-            xaxis=dict(title="Hour of Shift (1 to 6)", tickvals=[1, 2, 3, 4, 5, 6]),
-            yaxis=dict(title="% of Regional Total", showgrid=True, gridcolor='#eee',
-                       range=[0, max(df_r['Percent_of_Shift']) * 1.2])
+            xaxis=dict(
+                title="Hour of Shift (10-min intervals)",
+                tickmode="array",
+                tickvals=tick_vals,
+                ticktext=tick_texts,
+                showgrid=False,
+            ),
+            yaxis=dict(
+                title="% of Regional Total",
+                showgrid=True,
+                gridcolor="#eee",
+                ticksuffix="%",
+                range=[0, max_y],
+            ),
         )
 
         if not plotly_included:
@@ -183,56 +338,61 @@ def generate_timeline_dashboard(df_raw, df_shift_dist, df_weekday_dist):
 
     # --- PART 2: WEEKDAY FATIGUE DISTRIBUTION ---
     fatigue_colors = []
-    for day in df_weekday_dist['Day_of_Week']:
-        if day == 'Friday':
-            fatigue_colors.append('#C0392B')
-        elif day == 'Tuesday':
-            fatigue_colors.append('#E67E22')
+    for day in df_weekday_dist["Day_of_Week"]:
+        if day == "Friday":
+            fatigue_colors.append("#C0392B")
+        elif day == "Tuesday":
+            fatigue_colors.append("#E67E22")
         else:
-            fatigue_colors.append('#7FB3D5')
+            fatigue_colors.append("#7FB3D5")
 
-    fig_fatigue = go.Figure(go.Bar(
-        x=df_weekday_dist['Day_of_Week'],
-        y=df_weekday_dist['QU_Count'],
-        marker_color=fatigue_colors,
-        text=df_weekday_dist['QU_Count'],
-        textposition='outside',
-        textfont=dict(weight='bold'),
-        hovertemplate="Day: %{x}<br>Alerts: %{y}<extra></extra>"
-    ))
+    fig_fatigue = go.Figure(
+        go.Bar(
+            x=df_weekday_dist["Day_of_Week"],
+            y=df_weekday_dist["QU_Count"],
+            marker_color=fatigue_colors,
+            text=df_weekday_dist["QU_Count"],
+            textposition="outside",
+            textfont=dict(weight="bold"),
+            hovertemplate="Day: %{x}<br>Alerts: %{y}<extra></extra>",
+        )
+    )
 
     fig_fatigue.update_layout(
-        title="Queue Unstaffed Alerts by Day of the Week (Highlighting Friday & Tuesday Fatigue)",
-        title_font=dict(size=16, color='#2C3E50'),
-        template='plotly_white',
+        title=(
+            "Queue Unstaffed Alerts by Day of the Week (Highlighting Friday &"
+            " Tuesday Fatigue)"
+        ),
+        title_font=dict(size=16, color="#2C3E50"),
+        template="plotly_white",
         height=450,
         margin=dict(l=40, r=40, t=60, b=40),
         yaxis_title="Total Unanswered Alerts",
         xaxis_title="Day of the Week",
-        yaxis=dict(range=[0, df_weekday_dist['QU_Count'].max() * 1.15])
+        yaxis=dict(range=[0, df_weekday_dist["QU_Count"].max() * 1.15]),
     )
     fatigue_html = fig_fatigue.to_html(full_html=False, include_plotlyjs=False)
 
     # --- PART 3: CHRONOLOGICAL TIMELINE PLOT (2 WEEKS PER ROW, CAPPED AT MAX DATA DATE) ---
-    df_qu['Post Timestamp'] = pd.to_datetime(df_qu['Post Timestamp'])
-    df_qu = df_qu.sort_values('Post Timestamp')
+    df_qu["Post Timestamp"] = pd.to_datetime(df_qu["Post Timestamp"])
+    df_qu = df_qu.sort_values("Post Timestamp")
 
-    max_data_date = df_qu['Post Timestamp'].max()
-    min_date = df_qu['Post Timestamp'].min()
-    start_date = min_date - pd.to_timedelta(min_date.dayofweek, unit='D')
+    max_data_date = df_qu["Post Timestamp"].max()
+    min_date = df_qu["Post Timestamp"].min()
+    start_date = min_date - pd.to_timedelta(min_date.dayofweek, unit="D")
     start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    df_qu['Days_Since'] = (df_qu['Post Timestamp'] - start_date).dt.days
-    df_qu['Block_ID'] = df_qu['Days_Since'] // 28
-    df_qu['Hour_Bin'] = df_qu['Post Timestamp'].dt.floor('h')
+    df_qu["Days_Since"] = (df_qu["Post Timestamp"] - start_date).dt.days
+    df_qu["Block_ID"] = df_qu["Days_Since"] // 28
+    df_qu["Hour_Bin"] = df_qu["Post Timestamp"].dt.floor("h")
 
-    blocks = df_qu['Block_ID'].unique()
+    blocks = df_qu["Block_ID"].unique()
     blocks.sort()
 
     row_intervals = []
     row_titles = []
     for b in blocks:
-        b_start = start_date + pd.to_timedelta(b * 28, unit='D')
+        b_start = start_date + pd.to_timedelta(b * 28, unit="D")
         b_mid = b_start + pd.Timedelta(days=14)
         b_end = b_start + pd.Timedelta(days=28)
 
@@ -240,35 +400,55 @@ def generate_timeline_dashboard(df_raw, df_shift_dist, df_weekday_dist):
         if b_start <= max_data_date:
             row_intervals.append((b_start, b_mid))
             row_titles.append(
-                f"2-Week Window: {b_start.strftime('%b %d, %Y')} to {(b_mid - pd.Timedelta(seconds=1)).strftime('%b %d, %Y')} (UTC)")
+                f"2-Week Window: {b_start.strftime('%b %d, %Y')} to"
+                f" {(b_mid - pd.Timedelta(seconds=1)).strftime('%b %d, %Y')}"
+                " (UTC)"
+            )
 
         if b_mid <= max_data_date:
             row_intervals.append((b_mid, b_end))
             row_titles.append(
-                f"2-Week Window: {b_mid.strftime('%b %d, %Y')} to {(b_end - pd.Timedelta(seconds=1)).strftime('%b %d, %Y')} (UTC)")
+                f"2-Week Window: {b_mid.strftime('%b %d, %Y')} to"
+                f" {(b_end - pd.Timedelta(seconds=1)).strftime('%b %d, %Y')}"
+                " (UTC)"
+            )
 
     fig_h = max(800, len(row_intervals) * 320)
-    fig_timeline = make_subplots(rows=len(row_intervals), cols=1, shared_xaxes=False, vertical_spacing=0.06,
-                                 subplot_titles=row_titles)
+    fig_timeline = make_subplots(
+        rows=len(row_intervals),
+        cols=1,
+        shared_xaxes=False,
+        vertical_spacing=0.06,
+        subplot_titles=row_titles,
+    )
 
     all_shapes = []
 
     for i, (r_start, r_end) in enumerate(row_intervals):
-        df_r = df_qu[(df_qu['Post Timestamp'] >= r_start) & (df_qu['Post Timestamp'] < r_end)]
+        df_r = df_qu[
+            (df_qu["Post Timestamp"] >= r_start)
+            & (df_qu["Post Timestamp"] < r_end)
+        ]
 
-        hourly_counts = df_r.groupby('Hour_Bin').size().reset_index(name='Count')
+        hourly_counts = (
+            df_r.groupby("Hour_Bin").size().reset_index(name="Count")
+        )
 
         # Shift bar x-coordinates forward by 30 minutes so they align perfectly within their hour block
-        shifted_x = hourly_counts['Hour_Bin'] + pd.Timedelta(minutes=30)
+        shifted_x = hourly_counts["Hour_Bin"] + pd.Timedelta(minutes=30)
 
-        fig_timeline.add_trace(go.Bar(
-            x=shifted_x,
-            y=hourly_counts['Count'],
-            marker_color='#2C3E50',
-            showlegend=False,
-            width=3600000 * 0.85,
-            hovertemplate="Alerts: %{y}<extra></extra>"
-        ), row=i + 1, col=1)
+        fig_timeline.add_trace(
+            go.Bar(
+                x=shifted_x,
+                y=hourly_counts["Count"],
+                marker_color="#2C3E50",
+                showlegend=False,
+                width=3600000 * 0.85,
+                hovertemplate="Alerts: %{y}<extra></extra>",
+            ),
+            row=i + 1,
+            col=1,
+        )
 
         xref_str = f"x{i + 1}" if i > 0 else "x"
         yref_str = f"y{i + 1} domain" if i > 0 else "y domain"
@@ -276,41 +456,67 @@ def generate_timeline_dashboard(df_raw, df_shift_dist, df_weekday_dist):
         for day_offset in range(-1, 14):
             base_day = r_start + pd.Timedelta(days=day_offset)
             shifts_in_day = [
-                ('Manila', base_day + pd.Timedelta(hours=22), base_day + pd.Timedelta(hours=28)),
-                ('India', base_day + pd.Timedelta(hours=4), base_day + pd.Timedelta(hours=10)),
-                ('EMEA', base_day + pd.Timedelta(hours=10), base_day + pd.Timedelta(hours=16)),
-                ('NA', base_day + pd.Timedelta(hours=16), base_day + pd.Timedelta(hours=22))
+                (
+                    "Manila",
+                    base_day + pd.Timedelta(hours=22),
+                    base_day + pd.Timedelta(hours=28),
+                ),
+                (
+                    "India",
+                    base_day + pd.Timedelta(hours=4),
+                    base_day + pd.Timedelta(hours=10),
+                ),
+                (
+                    "EMEA",
+                    base_day + pd.Timedelta(hours=10),
+                    base_day + pd.Timedelta(hours=16),
+                ),
+                (
+                    "NA",
+                    base_day + pd.Timedelta(hours=16),
+                    base_day + pd.Timedelta(hours=22),
+                ),
             ]
             for s_name, s_start, s_end in shifts_in_day:
                 x0 = max(r_start, s_start)
                 x1 = min(r_end, s_end)
                 if x0 < x1:
-                    all_shapes.append(dict(
-                        type="rect",
-                        xref=xref_str,
-                        yref=yref_str,
-                        x0=x0, x1=x1,
-                        y0=0, y1=1,
-                        fillcolor=shift_colors[s_name],
-                        opacity=0.5,
-                        layer="below",
-                        line=dict(width=0.5, color='black')
-                    ))
+                    all_shapes.append(
+                        dict(
+                            type="rect",
+                            xref=xref_str,
+                            yref=yref_str,
+                            x0=x0,
+                            x1=x1,
+                            y0=0,
+                            y1=1,
+                            fillcolor=shift_colors[s_name],
+                            opacity=0.5,
+                            layer="below",
+                            line=dict(width=0.5, color="black"),
+                        )
+                    )
 
-        midnight_dates = pd.date_range(start=r_start, end=r_end, freq='D')
+        midnight_dates = pd.date_range(start=r_start, end=r_end, freq="D")
         for md in midnight_dates:
-            all_shapes.append(dict(
-                type="line",
-                xref=xref_str,
-                yref=yref_str,
-                x0=md, x1=md,
-                y0=0, y1=1,
-                line=dict(width=1.2, color='#2C3E50', dash='dot')
-            ))
+            all_shapes.append(
+                dict(
+                    type="line",
+                    xref=xref_str,
+                    yref=yref_str,
+                    x0=md,
+                    x1=md,
+                    y0=0,
+                    y1=1,
+                    line=dict(width=1.2, color="#2C3E50", dash="dot"),
+                )
+            )
 
-        tick_dates = pd.date_range(start=r_start, end=r_end - pd.Timedelta(days=1), freq='D')
+        tick_dates = pd.date_range(
+            start=r_start, end=r_end - pd.Timedelta(days=1), freq="D"
+        )
         tick_vals = list(tick_dates)
-        tick_texts = [d.strftime('%b %d<br>(%a)') for d in tick_dates]
+        tick_texts = [d.strftime("%b %d<br>(%a)") for d in tick_dates]
 
         fig_timeline.update_xaxes(
             range=[r_start, r_end],
@@ -318,25 +524,59 @@ def generate_timeline_dashboard(df_raw, df_shift_dist, df_weekday_dist):
             ticktext=tick_texts,
             showgrid=False,
             row=i + 1,
-            col=1
+            col=1,
         )
 
     fig_timeline.update_layout(shapes=all_shapes)
 
     fig_timeline.add_trace(
-        go.Bar(x=[None], y=[None], marker_color=shift_colors['Manila'], name='Manila (22:00-04:00 UTC)'))
+        go.Bar(
+            x=[None],
+            y=[None],
+            marker_color=shift_colors["Manila"],
+            name="Manila (22:00-04:00 UTC)",
+        )
+    )
     fig_timeline.add_trace(
-        go.Bar(x=[None], y=[None], marker_color=shift_colors['India'], name='India (04:00-10:00 UTC)'))
-    fig_timeline.add_trace(go.Bar(x=[None], y=[None], marker_color=shift_colors['EMEA'], name='EMEA (10:00-16:00 UTC)'))
-    fig_timeline.add_trace(go.Bar(x=[None], y=[None], marker_color=shift_colors['NA'], name='NA (16:00-22:00 UTC)'))
-
-    fig_timeline.update_yaxes(title_text="Alerts", showgrid=True, gridcolor='#eee')
-    fig_timeline.update_layout(
-        template='plotly_white', height=fig_h, margin=dict(l=40, r=40, t=60, b=80),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5)
+        go.Bar(
+            x=[None],
+            y=[None],
+            marker_color=shift_colors["India"],
+            name="India (04:00-10:00 UTC)",
+        )
+    )
+    fig_timeline.add_trace(
+        go.Bar(
+            x=[None],
+            y=[None],
+            marker_color=shift_colors["EMEA"],
+            name="EMEA (10:00-16:00 UTC)",
+        )
+    )
+    fig_timeline.add_trace(
+        go.Bar(
+            x=[None],
+            y=[None],
+            marker_color=shift_colors["NA"],
+            name="NA (16:00-22:00 UTC)",
+        )
     )
 
-    timeline_html = fig_timeline.to_html(full_html=False, include_plotlyjs=True)
+    fig_timeline.update_yaxes(
+        title_text="Alerts", showgrid=True, gridcolor="#eee"
+    )
+    fig_timeline.update_layout(
+        template="plotly_white",
+        height=fig_h,
+        margin=dict(l=40, r=40, t=60, b=80),
+        legend=dict(
+            orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5
+        ),
+    )
+
+    timeline_html = fig_timeline.to_html(
+        full_html=False, include_plotlyjs=True
+    )
 
     # --- FINAL HTML ASSEMBLY ---
     html_out = f"""
@@ -379,7 +619,9 @@ def generate_timeline_dashboard(df_raw, df_shift_dist, df_weekday_dist):
         </div>
     </body></html>
     """
-    with open(safe_output_path(OUTPUT_DIR, "qu_timeline.html"), "w", encoding="utf-8") as f:
+    with open(
+        safe_output_path(OUTPUT_DIR, "qu_timeline.html"), "w", encoding="utf-8"
+    ) as f:
         f.write(html_out)
 
 
@@ -400,15 +642,25 @@ def main():
     latest_file = max(files, key=os.path.getmtime)
     print(f"📄 Reading Data from: {os.path.basename(latest_file)}")
 
-    df_summary = pd.read_excel(latest_file, sheet_name='Regional Summary', keep_default_na=False)
-    df_shift_dist = pd.read_excel(latest_file, sheet_name='Shift Distribution', keep_default_na=False)
-    df_weekday_dist = pd.read_excel(latest_file, sheet_name='Weekday Distribution', keep_default_na=False)
-    df_raw = pd.read_excel(latest_file, sheet_name='Raw Alerts', keep_default_na=False)
+    df_summary = pd.read_excel(
+        latest_file, sheet_name="Regional Summary", keep_default_na=False
+    )
+    df_shift_dist = pd.read_excel(
+        latest_file, sheet_name="Shift Distribution", keep_default_na=False
+    )
+    df_weekday_dist = pd.read_excel(
+        latest_file, sheet_name="Weekday Distribution", keep_default_na=False
+    )
+    df_raw = pd.read_excel(
+        latest_file, sheet_name="Raw Alerts", keep_default_na=False
+    )
 
     generate_index_dashboard(df_summary)
     generate_timeline_dashboard(df_raw, df_shift_dist, df_weekday_dist)
 
-    print(f"🎉 SUCCESS: Dashboards complete! Open '{OUTPUT_DIR}/index.html' to view.")
+    print(
+        f"🎉 SUCCESS: Dashboards complete! Open '{OUTPUT_DIR}/index.html' to view."
+    )
 
 
 if __name__ == "__main__":
