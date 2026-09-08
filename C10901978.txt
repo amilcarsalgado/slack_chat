@@ -1,4 +1,4 @@
-This is Pass  for case C10901978 with 7 Items
+This is Pass 1 for case C10901978 with 4 Items
 
 1. Case number: C10901978
 
@@ -165,64 +165,40 @@ Hello , can you help us to investigate the following issue/s. Fault/alarm that t
 - netgram workflow: https://www.internalfb.com/netgram/workflow/34557134-4a4e-4a12-98af-1bb4ef56397d?tier=netgram_thrift
 Have you visited the Ciena Support Portal to find what you were looking for?
 Visit my.ciena.com to submit a new support case, request and view latest case updates, search our knowledge base, share documents, request case closure, and much more!
-Item 5 [COMMENT] [N/A] [EXTERNAL] 1-01-01 00:00: ** Case Customer Update Post **
-Subject :
-Ciena RLS: Software subsystem failure detected  eu-fr-bod1-5-7
-Current Analysis :
-Log Analysis:
-SSF alarm raised on slot 3 RLA
-"ciena-pro-alarm:active-alarm": [{
-"id": 767,
-"name": "software-subsystem-fail",
-"resource": "/ciena-6500r-slots:slots[name='3']",
-"raise-time": "2026-07-30T15:43:50Z",
-"alarm-state": "enabled",
-"cause": "Software Subsystem Failure",
-"condition-type": "SOFTWARE-FAILURE",
-"location": "near-end",
-"severity": "major",
-"service-impact": "nsa",
-"additional-info": "POM Fail"
-}, {
-Slot 3 card card logs:
-199:Tm=00443801, V=1, Pt=pom_comm_fail, 07:30:2026::15:39:27:414
-Diagpnt        0002  Thu Jul 30, 2026 - 15:39:31.698 (UTC)  0013718838
-0:Tm=00443801, V=1, Pt=sssf_raw_1, 07:30:2026::15:39:27:414
-1:Tm=00443801, V=1, Pt=sssf_raw, 07:30:2026::15:39:27:414
-2:Tm=00443801, V=1, Pt=sssf, 07:30:2026::15:39:27:414
-3:Tm=00443801, V=1, Pt=sssf_alarm, 07:30:2026::15:39:27:414
-4:Tm=00443801, V=1, Pt=latch_sssf, 07:30:2026::15:39:27:415
-This issue has been observed in the past and cleared with a cold restart of RLA card
-Next Committed Update :
-null
-Ciena Next Steps :
-Standby and provide assistance as needed
-Customer Next Steps :
-Cold restart slot 3 RLA card
-Item 6 [COMMENT] [N/A] [EXTERNAL] 1-01-01 00:00: Case With Customer Notice - C10901978
-Customer Notification     
-Your support Case has been marked as With Customer.
+
+
+3. The cut/off date based on the last interaction
+
+Line 1
+Line 2
+Line 3
+Pasting large blocks: When you paste multiple lines from your query tool or notes, Python will read every single line in sequence.
+
+
+4. Content of last Interaction
+
+Item 4 [COMMENT] [N/A] [EXTERNAL] 1-01-01 00:00: Case Being Worked Notice - C10901978
+Customer Notification
+Your support Case has been marked as In Progress.
 You will receive further status emails and a final email when this ticket is closed.
 Remember to reference Case # C10901978 should you need to follow up with Ciena.
-Customer Next Steps
-Cold restart slot 3 RLA card
 Case Details
 Ciena Case #:    C10901978
-Case Status:    With Customer
+Case Status:    In Progress
 Service Tier:    Premier
 Product:    6500 Reconfigurable Line System (RLS)
 Business Impact:    Minor Business Impacting Issue
 Software Release:    4.1.11
 Software Status:    GA - General Availability
 Customer:    META PLATFORMS, INC.
-Customer Tracking #:    favex5942944/T282846280
+Customer Tracking #:    favex5942944
 Customer Attribute:    
 Case Opened:    7/30/2026
 Contact Method:    API
-Support Engineer:    Sanjay Saini
+Support Engineer:    Luke Van Fraassen
 Summary
 Subject:
-Ciena RLS: Software subsystem failure detected  eu-fr-bod1-5-7
+# [RLS 6500][4.1.11] - eu-fr-bod1-5-7 - [T282846280]
 Description:
 # [RLS 6500][4.1.11] - eu-fr-bod1-5-7 - 
 Hello , can you help us to investigate the following issue/s. Fault/alarm that trigger the case:
@@ -235,86 +211,5 @@ Hello , can you help us to investigate the following issue/s. Fault/alarm that t
 - Customer Attribute: Other
 - Customer Availability: No need for direct contact; prefer communication via ticket updates with assigned support engineer
 - netgram workflow: https://www.internalfb.com/netgram/workflow/34557134-4a4e-4a12-98af-1bb4ef56397d?tier=netgram_thrift
-Current Analysis:
-Log Analysis: SSF alarm raised on slot 3 RLA  "ciena-pro-alarm:active-alarm": [{        "id": 767,        "name": "software-subsystem-fail",        "resource": "/ciena-6500r-slots:slots[name='3']",        "raise-time": "2026-07-30T15:43:50Z",        "alarm-state": "enabled",        "cause": "Software Subsystem Failure",        "condition-type": "SOFTWARE-FAILURE",        "location": "near-end",        "severity": "major",        "service-impact": "nsa",        "additional-info": "POM Fail"      }, {Slot 3 card card logs:199:Tm=00443801, V=1, Pt=pom_comm_fail, 07:30:2026::15:39:27:414
-Diagpnt        0002  Thu Jul 30, 2026 - 15:39:31.698 (UTC)  0013718838 0:Tm=00443801, V=1, Pt=sssf_raw_1, 07:30:2026::15:39:27:414 1:Tm=00443801, V=1, Pt=sssf_raw, 07:30:2026::15:39:27:414 2:Tm=00443801, V=1, Pt=sssf, 07:30:2026::15:39:27:414 3:Tm=00443801, V=1, Pt=sssf_alarm, 07:30:2026::15:39:27:414 4:Tm=00443801, V=1, Pt=latch_sssf, 07:30:2026::15:39:27:415
-This issue has been observed in the past and cleared with a cold restart of RLA card
-Ciena Next Steps:
-Standby and provide assistance as needed
-Item 7 [COMMENT] [N/A] [EXTERNAL] 1-01-01 00:00: Latest Case Summary
- Latest Case Summary - C10901978
- Case Details
- Ciena Case #: 
- C10901978
- Customer: 
- META PLATFORMS, INC. 
- Customer Tracking #:
- favex5942944/T282846280
- Case Status:
- In Progress
- Product:
- 6500 Reconfigurable Line System (RLS)
- Software: 
- 4.1.11 (GA)
- Business Impact:
- Minor Business Impacting Issue
- Service Tier: 
- Premier
- Case Type:
- Technical Support
- Note: To ensure a consistent experience across devices and systems, we do not include images in this email update. To see the latest status of your case, including referenced images, visit my.ciena.com.
-Summary
- Subject:
- Ciena RLS: Software subsystem failure detected eu-fr-bod1-5-7
- Current Analysis:
- Log Analysis: SSF alarm raised on slot 3 RLA  "ciena-pro-alarm:active-alarm": [{        "id": 767,        "name": "software-subsystem-fail",        "resource": "/ciena-6500r-slots:slots[name='3']",        "raise-time": "2026-07-30T15:43:50Z",        "alarm-state": "enabled",        "cause": "Software Subsystem Failure",        "condition-type": "SOFTWARE-FAILURE",        "location": "near-end",        "severity": "major",        "service-impact": "nsa",        "additional-info": "POM Fail"      }, {Slot 3 card card logs:199:Tm=00443801, V=1, Pt=pom_comm_fail, 07:30:2026::15:39:27:414
-Diagpnt        0002  Thu Jul 30, 2026 - 15:39:31.698 (UTC)  0013718838 0:Tm=00443801, V=1, Pt=sssf_raw_1, 07:30:2026::15:39:27:414 1:Tm=00443801, V=1, Pt=sssf_raw, 07:30:2026::15:39:27:414 2:Tm=00443801, V=1, Pt=sssf, 07:30:2026::15:39:27:414 3:Tm=00443801, V=1, Pt=sssf_alarm, 07:30:2026::15:39:27:414 4:Tm=00443801, V=1, Pt=latch_sssf, 07:30:2026::15:39:27:415
-This issue has been observed in the past and cleared with a cold restart of RLA card
- Ciena Next Steps:
- Standby and provide assistance as needed
- Customer Next Steps:
- Cold restart slot 3 RLA card
- Next Committed Update:
-
-
-3. The cut/off date based on the last interaction
-
-The timestamp is:
-
-
-4. Content of last Interaction
-
-Item 7 [COMMENT] [N/A] [EXTERNAL] 1-01-01 00:00: Latest Case Summary
- Latest Case Summary - C10901978
- Case Details
- Ciena Case #: 
- C10901978
- Customer: 
- META PLATFORMS, INC. 
- Customer Tracking #:
- favex5942944/T282846280
- Case Status:
- In Progress
- Product:
- 6500 Reconfigurable Line System (RLS)
- Software: 
- 4.1.11 (GA)
- Business Impact:
- Minor Business Impacting Issue
- Service Tier: 
- Premier
- Case Type:
- Technical Support
- Note: To ensure a consistent experience across devices and systems, we do not include images in this email update. To see the latest status of your case, including referenced images, visit my.ciena.com.
-Summary
- Subject:
- Ciena RLS: Software subsystem failure detected eu-fr-bod1-5-7
- Current Analysis:
- Log Analysis: SSF alarm raised on slot 3 RLA  "ciena-pro-alarm:active-alarm": [{        "id": 767,        "name": "software-subsystem-fail",        "resource": "/ciena-6500r-slots:slots[name='3']",        "raise-time": "2026-07-30T15:43:50Z",        "alarm-state": "enabled",        "cause": "Software Subsystem Failure",        "condition-type": "SOFTWARE-FAILURE",        "location": "near-end",        "severity": "major",        "service-impact": "nsa",        "additional-info": "POM Fail"      }, {Slot 3 card card logs:199:Tm=00443801, V=1, Pt=pom_comm_fail, 07:30:2026::15:39:27:414
-Diagpnt        0002  Thu Jul 30, 2026 - 15:39:31.698 (UTC)  0013718838 0:Tm=00443801, V=1, Pt=sssf_raw_1, 07:30:2026::15:39:27:414 1:Tm=00443801, V=1, Pt=sssf_raw, 07:30:2026::15:39:27:414 2:Tm=00443801, V=1, Pt=sssf, 07:30:2026::15:39:27:414 3:Tm=00443801, V=1, Pt=sssf_alarm, 07:30:2026::15:39:27:414 4:Tm=00443801, V=1, Pt=latch_sssf, 07:30:2026::15:39:27:415
-This issue has been observed in the past and cleared with a cold restart of RLA card
- Ciena Next Steps:
- Standby and provide assistance as needed
- Customer Next Steps:
- Cold restart slot 3 RLA card
- Next Committed Update:
+Have you visited the Ciena Support Portal to find what you were looking for?
+Visit my.ciena.com to submit a new support case, request and view latest case updates, search our knowledge base, share documents, request case closure, and much more!

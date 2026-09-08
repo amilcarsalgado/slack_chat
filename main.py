@@ -175,8 +175,22 @@ def main():
         root.update()
         print("[SUCCESS] The text above has been copied to your clipboard!\n")
 
-        # 2. Prompt for the cut/off date response
-        user_response = input("Please enter the response text for the cut/off date (Point 3):\n> ")
+        # 2. Prompt for multi-line response text (paste multiple lines, then press Enter twice)
+        print("Please enter/paste the response text for the cut/off date (Point 3).")
+        print("(Press Enter twice on an empty line when finished):")
+
+        response_lines = []
+        while True:
+            try:
+                line = input()
+            except EOFError:
+                break
+            if not line.strip() and response_lines:
+                # Stop collecting when an empty line is submitted after content
+                break
+            response_lines.append(line)
+
+        user_response = "\n".join(response_lines).strip()
 
         # 3. Prompt for the Pass number
         pass_number = input("Is this Pass 1 or 2? (Enter 1 or 2):\n> ").strip()
