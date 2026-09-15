@@ -150,19 +150,30 @@ def prompt_for_channels():
 
 def get_reporting_range_from_input():
     print("\n--- Manual Date Range Selection ---")
+
+    # 1. Get valid start date
     while True:
         try:
             start_input = input("Enter start date (DD/MM/YY): ").strip()
             start_dt = datetime.strptime(start_input, "%d/%m/%y")
-            end_input = input("Enter end date (DD/MM/YY) or 'Now': ").strip()
-            if end_input.lower() == "now":
+            break
+        except ValueError:
+            print("❌ Invalid start date format. Please use DD/MM/YY.")
+
+    # 2. Get valid end date (defaults to Now if left blank)
+    while True:
+        try:
+            end_input = input("Enter end date (DD/MM/YY) or press Enter for 'Now': ").strip()
+
+            if not end_input or end_input.lower() == "now":
                 end_dt = datetime.now()
             else:
                 end_dt = datetime.strptime(end_input, "%d/%m/%y")
                 end_dt = end_dt.replace(hour=23, minute=59, second=59)
+
             return start_dt, end_dt
         except ValueError:
-            print("❌ Invalid input. Please use DD/MM/YY format.")
+            print("❌ Invalid end date format. Please use DD/MM/YY or leave blank for 'Now'.")
 
 
 # ---------------------------------------------------------
