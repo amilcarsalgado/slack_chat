@@ -4,18 +4,18 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 # 1. Load Tokens using explicit path (since script is inside the subfolder)
-script_dir = os.path.dirname(os.path.abspath(__file__))
-env_path = os.path.join(script_dir, "..", ".env")
+
+env_path = r"C:\Users\asalgado\PycharmProjects\Slack_Chatalert\.env"
 load_dotenv(dotenv_path=env_path)
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_TOKEN")
-SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN")
+SLACK_APP_TOKEN = os.getenv("BOT_TOKEN")
 
 if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
     raise EnvironmentError(f"CRITICAL: Tokens missing. Checked path: {env_path}")
 
 # TODO: Replace with the actual 'C...' ID you retrieve from your console for #di-test
-TARGET_CHANNEL_ID = "C0123456789"
+TARGET_CHANNEL_ID = "C0C4051R9SN"
 
 # 2. Initialize App
 app = App(token=SLACK_BOT_TOKEN)
