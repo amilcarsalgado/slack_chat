@@ -1,35 +1,40 @@
+import os
 import getpass
 from snowflake.snowpark import Session
 
+# Force Python to trust both public certificates and the internal corporate proxy
+# Replace this path with the exact location of your combined PEM file
+os.environ["REQUESTS_CA_BUNDLE"] = r"C:\Users\ravi\PycharmProjects\Slack_ChatAlert\combined_ca_bundle.pem"
+
 
 def main():
-    # 1. Dynamically build your user ID (e.g., ASALGADO@CIENA.COM)
+    # Dynamically build your user ID (e.g., ASALGADO@CIENA.COM)
     current_user = getpass.getuser().upper() + "@CIENA.COM"
     print(f"Attempting Okta SSO login for: {current_user}")
 
-    # 2. Match the exact connection dictionary from the GUI disassembly
+    # Match the exact connection dictionary from the GUI disassembly
     connection_parameters = {
-        "account": "ciena-ciena",  # [cite: 2]
-        "user": current_user,  # [cite: 2]
-        "authenticator": "externalbrowser",  # [cite: 2]
-        "role": "SSO_SNOWFLAKE_GAI_SVC_RO",  # [cite: 2]
-        "warehouse": "GAI_POC",  # [cite: 2]
-        "database": "FLYGAIP",  # [cite: 2]
-        "schema": "GAI_SERVICES",  # [cite: 2]
-        # Critical network bypasses for corporate proxies (e.g., Zscaler)
-        "insecure_mode": True,  # [cite: 2]
-        "disable_ocsp_checks": True  # [cite: 2]
+        "account": "ciena-ciena",
+        "user": current_user,
+        "authenticator": "externalbrowser",
+        "role": "SSO_SNOWFLAKE_GAI_SVC_RO",
+        "warehouse": "GAI_POC",
+        "database": "FLYGAIP",
+        "schema": "GAI_SERVICES",
+        # Critical network bypasses for corporate proxies
+        "insecure_mode": True,
+        "disable_ocsp_checks": True
     }
 
     try:
-        # 3. Build and create the Snowpark Session
+        # Build and create the Snowpark Session
         print("Waiting for browser authentication...")
         session = Session.builder.configs(connection_parameters).create()
 
-        # 4. Verify the connection worked
+        # Verify the connection worked
         print("\n✅ Successfully connected to Snowpark!")
 
-        # 5. The POC Task: Ask Cortex to summarize a dummy network outage
+        # The POC Task: Ask Cortex to summarize a dummy network outage
         mock_log = (
             "14:02 EST - ALARM: Loss of Signal (LOS) on Slot 3, Port 1. "
             "14:15 EST - Field tech dispatched to site. "
