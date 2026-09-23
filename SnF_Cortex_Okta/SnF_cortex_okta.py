@@ -4,7 +4,7 @@ from snowflake.snowpark import Session
 
 # Force Python to trust both public certificates and the internal corporate proxy
 # Replace this path with the exact location of your combined PEM file
-os.environ["REQUESTS_CA_BUNDLE"] = r"C:\Users\ravi\PycharmProjects\Slack_ChatAlert\combined_ca_bundle.pem"
+os.environ["REQUESTS_CA_BUNDLE"] = r"C:\Users\asalgado\PycharmProjects\Slack_Chatalert\SnF_Cortex_Okta\combined_ca_bundle.pem"
 
 
 def main():
