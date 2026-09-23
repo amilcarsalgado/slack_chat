@@ -23,6 +23,10 @@ app = App(token=SLACK_BOT_TOKEN)
 
 # 3. Listen for messages, supporting channel filtering and thread replies
 @app.event("message")
+def handle_any_mesage(client, event, say):
+    print(f"Raw Event Received: {event}")
+
+'''
 def handle_all_messages(event, say):
     # Ignore hidden events (edits, deletions, bot messages, etc.)
     if event.get("subtype"):
@@ -45,6 +49,8 @@ def handle_all_messages(event, say):
 
     print(f"   User: {user}")
     print(f"   Text: {text}\n")
+
+'''
 
 
 if __name__ == "__main__":
