@@ -1,0 +1,74 @@
+Connected as role=SSO_SNOWFLAKE_GAI_SVC_RO, warehouse=GAI_POC
+
+Sending question from: C10929842_ERT.txt
+Prompt length: 5,261 characters
+
+Answer:
+
+
+**Case C10929842 — ILAN SLDD Adjacency Loss (LOGIX COMMUNICATIONS)**
+
+- **Product:** 6500 · **Software:** REL1560Z.PS (Release 15.6 v4) · **Status:** With Customer · **Priority:** Minor
+- **Problem:** SLDD Adjacency Loss on ILAN-1-IN and ILAN-1-OUT. OSPF adjacencies verified in FULL state; pings between shelves OK; ports at Auto 100 FD. Opaque LSAs confirmed OFF. Toggling SLDD admin state and deleting/recreating SLDD interfaces had no effect.
+- **Ruled out:** Physical link failure (ping OK), OSPF communication break (adjacencies full), SLDD interface toggle (already attempted).
+
+---
+
+**Merge Stats (2-round ensemble retrieval):**
+- Round 1 candidates: ~52 · Round 2 candidates: ~222 · Merged unique: ~240+ · Overlap between rounds: ~20 cases
+
+---
+
+**1. Most Likely Root Causes**
+
+- **SPLI / SLDD scope-ID or DBRS configuration mismatch** — per [Case C10846342](https://ciena.lightning.force.com/lightning/r/Case/500VR00000YDVF0YAP/view) (MEMORIAL SLOAN-KETTERING, REL1272Z.XQ, Closed): OSPF timer and parameter mismatches between shelves caused ILAN adjacency loss alarms and Adjacency Discovery Unreliable; SLDD/SPLI statistics showed unreliable connections even when OSPF was nominally up.
+- **Physical Ethernet cabling degradation at ILAN ports** — per [Case C10831563](https://ciena.lightning.force.com/lightning/r/Case/500VR00000VVlM0YAL/view) (RJIL, REL1272Z.XZ, Closed), [Case C10839919](https://ciena.lightning.force.com/lightning/r/Case/500VR00000Xvhf4YAB/view) (Airtel, REL1272Z.XZ, Closed), and [Case C10901293](https://ciena.lightning.force.com/lightning/r/Case/500VR00000nOcbaYAC/view) (Charter, REL1560Z.PS, Closed): in all three, LAN cable replacement between ILAN-IN and ILAN-OUT ports resolved persistent adjacency alarms even when port status appeared OK.
+- **Access Panel (AP) fault on involved shelf** — per [Case C10871290](https://ciena.lightning.force.com/lightning/r/Case/500VR00000eJeJIYA0/view) (Spark NZ, REL1696Z.JS, Closed): recurring ILAN LAN Link Failure + OSPFv2 Adjacency Loss resolved by AP reseat/replacement; customer was advised to replace AP if alarm recurred.
+- **SP card requiring warm restart to reinitialize SLDD subsystem** — per [Case C10852910](https://ciena.lightning.force.com/lightning/r/Case/500VR00000ZvC1kYAF/view) (LOGIX COMMUNICATIONS, REL1560Z.PS, Closed): same customer, same software, OSPF routing issues between shelves in a TIDc configuration resolved by warm restart of active SP.
+
+---
+
+**2. Debugging Steps/Commands to Try**
+
+- Run `comms sldd list show` on both affected shelves to confirm SLDD operational state; per **Case C10903414** (Closed) a targeted ILAN interface toggle between the specific shelves (not just the local node) cleared the alarm.
+- Check `comms spli statistics show` on the primary shelf — per **Case C10846342**, unreliable SPLI statistics between shelves pointed to the root cause before OSPF timer correction.
+- Verify OSPF circuit parameters match at both ends of each ILAN link: `comms ospf circuit show` for dead-interval, hello-interval, retransmit-interval, auth-type, and opaque settings — per [Case C10864713](https://ciena.lightning.force.com/lightning/r/Case/500VR00000cCBkwYAG/view) (Verizon, REL1263Z, Closed), parameter mismatches between near/far end cause persistent ILAN OSPF adjacency loss.
+- Confirm DBRS is **disabled** on the node (`comms dbrs config show`); if DBRS is ON, disable it and re-test — the case owner specifically flagged this as an open question.
+- Inspect ILAN Ethernet cable physical status: LED on SP card ILAN port should be solid green on both shelves; per **Case C10831563**, even cables reporting "link up" can carry intermittent L2 faults.
+
+---
+
+**3. Known Log/Alarm Signatures to Look For**
+
+- `LAN_OSPF_FAIL` on ILAN-x-IN or ILAN-x-OUT (condtype `LAN_OSPF_FAIL`) — the primary alarm reported.
+- `ADJUNR_OTS` (Adjacency Discovery Unreliable) on SHELF — per **Case C10846342** and **Case C10832659**, this often appears alongside ILAN OSPF adjacency loss and indicates the SPLI detects unreliable inter-shelf connectivity.
+- `MBR_SHLF_UNRCHABLE` or `MBR_SHLF_UNKNOWN` (Member Shelf Unreachable/Unknown) — indicates complete inter-shelf communication breakdown; per [Case C10908668](https://ciena.lightning.force.com/lightning/r/Case/500VR00000m8IbgYAE/view) (Comcast, REL1560Z.OA, Closed), SP reseat resolved this condition.
+- `NET` condtype on ILAN ports (LAN Link Failure) — if this co-occurs, suspect physical cable or AP issue.
+- Check SP debug logs for `OAM Software Subsystem Restarted` or `Warm Restart Completed` — autonomous SP restarts are a known cause of transient ILAN OSPF adjacency loss per multiple cases.
+
+---
+
+**4. Most Likely Resolution Path**
+
+- **Step 1:** Confirm DBRS is OFF. If DBRS is ON, disable it and monitor. Per the case owner's own notes, this is a pending verification.
+- **Step 2:** Verify OSPF circuit parameters match on both ends of the ILAN-1-IN and ILAN-1-OUT links (dead-interval, hello-interval, opaque setting). Per **Case C10864713** and **Case C10846342**, parameter discrepancies cause persistent adjacency loss even when the link is physically healthy.
+- **Step 3:** If config checks pass, have on-site personnel reseat the Ethernet cable on ILAN-1-IN and ILAN-1-OUT on the affected shelf and its neighbor shelves. Replace the cables if possible. Per **Case C10831563** and **Case C10839919**, cable replacement resolved the issue.
+- **Step 4:** If cable replacement does not clear the alarm, perform a warm reboot of the active SP on the affected node. Per **Case C10852910** (same customer, same software) and **Case C10908668**, SP restart reinitializes the SLDD/ILAN subsystem.
+- **Step 5:** If alarm persists after SP warm restart, reseat or replace the Access Panel on the affected shelf. Per **Case C10871290** and **Case C10893205**, a faulty AP caused persistent ILAN LAN Link Failure and adjacency alarms.
+
+---
+
+Would you like me to go deeper on any of these cases, or pull the next set of ranked similar cases?
+
+---
+
+The Snowflake AI Intelligence uses generative AI and may product errors. Users are responsible for validating all output; use is not approved for financial reporting related activities or other applications with low margin of error. In the event of erroneous or questionable output please contact mnewman@ciena.com
+
+========================================
+Round-trip time: 4m 45.33s
+========================================
+
+Suggested follow-ups:
+  - Pull the full narrative and resolution details for case C10903414 — the one where toggling the ILAN interface cleared the OSPFv2 Adjacency Loss alarm.
+  - Has LOGIX COMMUNICATIONS had any other ILAN or SLDD-related cases beyond the 12-month window that might show a recurring pattern on their network?
+  - Show me the detailed diagnostic pathway from case C10864713 — the Verizon case with the step-by-step OSPF verification POA for ILAN adjacency loss.

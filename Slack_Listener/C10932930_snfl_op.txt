@@ -1,0 +1,31 @@
+Initiating login request with your identity provider. Press CTRL+C to abort and try again...
+Going to open: https://ciena.okta.com/app/snowflake/exk1izoqxb3L3PKzF0h8/sso/saml?SAMLRequest=lZJRb9owFIX%2FSuQ9J3ZChcACqgzGisg61oRO4s0kBlwcO%2Fg6hPLrZ0KZuodWmuQHyz7n%2BvM9d3B%2FKqV35AaEVkMUBgR5XOW6EGo7RMts6veQB5apgkmt%2BBC9ckD3owGwUlY0ru1OPfFDzcF6rpAC2l4MUW0U1QwEUMVKDtTmNI1%2FJDQKCK2MtjrXEr2zfO5gANxYR3izFCAc3s7aimLcNE3QdAJttjgihGDSx051kXy56U%2FuTx%2FoQ0zuLnqncPLFG9tXoa4t%2BAxrfRUBfciyhb%2F4mWbIi2%2BoY62gLrlJuTmKnC%2BfkisAOILx7NtjHNTgcwbWDwNQutlItue5LqvaupqB2%2BENL7DUW%2BG%2BPZsMUbUXxcOhio6TeUK%2Bd1MilYo363XSXc2T38tVmDy%2F%2FKrOL%2Bu7Ig1Xyxx5z7dco0uuM4Caz9QlTeuOSNT1Sd%2BPelkU0qjjVkBIf4W8iUtTKGZb5w05F1yxQO8ta9FYVeG%2F1Jif9qE468Np3Uk6i%2Fl5SnY9DKDxJVp0nRbaPm9G%2F9eDAX7vfRu7R5fEbLLQUuSv3lSbktmPgwqDsD0Rhb9ppZSXTMi4KAwHcIFJqZux4cy66bam5giPrq%2F%2BO9%2BjPw%3D%3D&RelayState=ver%3A3-hint%3A4739458502289622-ETMsDgAAAaDp5qkBABRBRVMvQ0JDL1BLQ1M1UGFkZGluZwEAABAAENQOzNo2ecdfTeP2qv6zEsMAAACgX2vDmKdhH3QFV8ySXczBRhoEGopTJzxX0mCUHEI%2FQbf%2BUgV4PBkWDhZoqTOq7mE6eOGwh%2FSzBTXutWUVLni8K9VsePsNrDscC4UfNyIEYilUBW4qgkp1BB2o9dZwFuvR9%2B31%2FZ1M7g75TzeK%2B5Es9a2rdQpfY9l97IsidO9h8jGF%2BBuxv5C4gchfHVitwXBt%2BNqUzhx5YMjTHBTZPj00aAAUNfAfGpCZSIkJI93MJWC7kjO3sIY%3D to authenticate...
+A browser window should have opened for you to complete the login. If you can't see it, check existing browser windows, or your OS settings.
+Connected as role=SSO_SNOWFLAKE_GAI_SVC_RO, warehouse=GAI_POC
+
+Sending question from: C10932930_ERT.txt
+Prompt length: 5,261 characters
+
+Answer:
+
+
+Case **C10932930** was not found in our case management data. The highest case number currently available in the system starting with "C109" is **C10932929**, which means C10932930 is likely very recently created and has not yet been replicated into our analytics data warehouse.
+
+**What you can do:**
+- **Wait and retry** — the case will typically appear in the system after the next data sync cycle.
+- **Provide the case details manually** — if you share the product, subject, description, alarms, and software version from the case, I can run the full similarity search against those details immediately (Phase 1B entry path).
+- **Try a nearby case** — if you meant a different case number (e.g., C10932929), let me know and I'll pull it.
+
+Would you like to proceed with one of these options?
+
+---
+
+The Snowflake AI Intelligence uses generative AI and may product errors. Users are responsible for validating all output; use is not approved for financial reporting related activities or other applications with low margin of error. In the event of erroneous or questionable output please contact mnewman@ciena.com
+
+========================================
+Round-trip time: 1m 32.81s
+========================================
+
+Suggested follow-ups:
+  - Can you pull the details for case C10932929 instead?
+  - What are the most recent cases created in the system and their current status?
