@@ -12,7 +12,7 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 # ==========================================
 # 1. ENVIRONMENT & TOKEN CONFIGURATION V1
 # ==========================================
-#env_path = r"C:\Users\ravi\PycharmProjects\Slack_Chatalert\.env"
+# env_path = r"C:\Users\ravi\PycharmProjects\Slack_Chatalert\.env"
 env_path = r"C:\Users\asalgado\PycharmProjects\Slack_Chatalert\.env"
 load_dotenv(dotenv_path=env_path)
 
@@ -28,7 +28,7 @@ if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
 TARGET_CHANNEL_IDS = [
     "C0C4051R9SN",  # #di-test
     "C09GV7JFGV7"  # #cpo-broadband-team
-    #"C08PFDQM5M0"  # #ert-active-outages-channel
+    # "C08PFDQM5M0"  # #ert-active-outages-channel
 ]
 
 app = App(token=SLACK_BOT_TOKEN)
@@ -52,7 +52,7 @@ def create_ert_prompt_file(case_number: str) -> str:
     with open(output_filename, "w", encoding="utf-8") as f:
         f.write(prompt_content)
 
-    print(f"💾 Created prompt file: {output_filename}")
+    # print(f"💾 Created prompt file: {output_filename}")
     return output_filename
 
 
@@ -91,14 +91,13 @@ def handle_incoming_case_request(event, say):
                 thread_ts=message_ts
             )
 
-            #mcp_python_exe = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\.venv\Scripts\python.exe"
-            #mcp_script_path = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\call_snfl.py"
+            # mcp_python_exe = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\.venv\Scripts\python.exe"
+            # mcp_script_path = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\call_snfl.py"
 
             mcp_python_exe = r"C:\Users\asalgado\PycharmProjects\SnF_MCP_Test\.venv\Scripts\python.exe"
             mcp_script_path = r"C:\Users\asalgado\PycharmProjects\SnF_MCP_Test\call_snfl.py"
 
-
-            print(f"🚀 Triggering call_snfl.py for {case_number} via subprocess...")
+            # print(f"🚀 Triggering call_snfl.py for {case_number} via subprocess...")
 
             # Capture in memory cleanly
             result = subprocess.run(
@@ -113,13 +112,18 @@ def handle_incoming_case_request(event, say):
 
             mcp_output = result.stdout.strip()
 
+            # 🛠️ THE FIX: Strip out Okta Auth and Metadata header
+            if "Answer:" in mcp_output:
+                mcp_output = mcp_output.split("Answer:", 1)[-1].strip()
+
             # 🛠️ THE FIX: Bulletproof Mojibake Translation using latin1
             # latin1 prevents the 'charmap' crash because it perfectly maps all 256 byte values
             try:
                 mcp_output = mcp_output.encode("latin1", errors="ignore").decode("utf-8", errors="replace")
-                print("✨ Successfully cleaned garbled text encoding.")
+                # print("✨ Successfully cleaned garbled text encoding.")
             except Exception as decode_err:
-                print(f"⚠️ Translation fallback triggered: {decode_err}")
+                pass
+                # print(f"⚠️ Translation fallback triggered: {decode_err}")
 
             output_filename = f"{case_number}_snfl_op.txt"
             with open(output_filename, "w", encoding="utf-8") as out_f:
@@ -162,5 +166,5 @@ def handle_incoming_case_request(event, say):
 # 5. EXECUTION
 # ==========================================
 if __name__ == "__main__":
-    print(f"⚡️ Slack ERT Listener active! Monitoring {len(TARGET_CHANNEL_IDS)} channels...")
+    # print(f"⚡️ Slack ERT Listener active! Monitoring {len(TARGET_CHANNEL_IDS)} channels...")
     SocketModeHandler(app, SLACK_APP_TOKEN).start()
