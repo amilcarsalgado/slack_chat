@@ -12,7 +12,8 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 # ==========================================
 # 1. ENVIRONMENT & TOKEN CONFIGURATION
 # ==========================================
-env_path = r"C:\Users\ravi\PycharmProjects\Slack_Chatalert\.env"
+#env_path = r"C:\Users\ravi\PycharmProjects\Slack_Chatalert\.env"
+env_path = r"C:\Users\asalgado\PycharmProjects\Slack_Chatalert\.env"
 load_dotenv(dotenv_path=env_path)
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_TOKEN")
@@ -26,8 +27,8 @@ if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
 # ==========================================
 TARGET_CHANNEL_IDS = [
     "C0C4051R9SN",  # #di-test
-    "C09GV7JFGV7",  # #cpo-broadband-team
-    "C08PFDQM5M0"  # #ert-active-outages-channel
+    "C09GV7JFGV7"  # #cpo-broadband-team
+    #"C08PFDQM5M0"  # #ert-active-outages-channel
 ]
 
 app = App(token=SLACK_BOT_TOKEN)
@@ -90,8 +91,12 @@ def handle_incoming_case_request(event, say):
                 thread_ts=message_ts
             )
 
-            mcp_python_exe = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\.venv\Scripts\python.exe"
-            mcp_script_path = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\call_snfl.py"
+            #mcp_python_exe = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\.venv\Scripts\python.exe"
+            #mcp_script_path = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\call_snfl.py"
+
+            mcp_python_exe = r"C:\Users\asalgado\PycharmProjects\SnF_MCP_Test\.venv\Scripts\python.exe"
+            mcp_script_path = r"C:\Users\asalgado\PycharmProjects\SnF_MCP_Test\call_snfl.py"
+
 
             print(f"🚀 Triggering call_snfl.py for {case_number} via subprocess...")
 

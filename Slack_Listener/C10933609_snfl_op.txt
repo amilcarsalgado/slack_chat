@@ -1,3 +1,6 @@
+Initiating login request with your identity provider. Press CTRL+C to abort and try again...
+Going to open: https://ciena.okta.com/app/snowflake/exk1izoqxb3L3PKzF0h8/sso/saml?SAMLRequest=lZJBb%2BIwEIX%2FSuQ9J04CrcAiVBQWgRZKFigr9WaSAVwSO%2FU4De2vrxNg1T200t4i5z1%2Fz%2FOmd3fKM%2BcVNAolIxJ4PnFAJioVch%2BRx%2FXY7RAHDZcpz5SEiLwBkrt%2BD3meFWxQmoNcwksJaBx7kURW%2F4hIqSVTHAUyyXNAZhK2GsxnLPR8xhFBG4sjF0uKwrIOxhSM0qqqvKrlKb2noe%2F71O9Sq6olP8gnRPE9o9DKqERlV8vJvukLRED9do2wCkuIL8Z7Ic8j%2BI6yPYuQTdbr2I0XqzVxBtfXDZXEMge9Av0qEnhczs4B0CYYTn8%2BDLwSXeBo3MBDqapdxo%2BQqLwojb3Ts190BynN1F7YSU1HESmOIq2e03kVHqvT4hmflpPR7%2FjPZK%2BL%2BbgVB3o%2Bai9mRbq9rzb5Zp4QZ3PtNax7nSKWMJV1m8Ye%2BeGt63fdsLsOOuzmlgU3XrvbfiLOyLYpJDeN8xo5ESC5p46GN9F4UdC%2FqSmcjoF4Vy%2BnbWvWin%2B9j%2F1DhyIqWldFztvCGrzu%2F98MevSz97J2D7aJ6ShWmUjenLHSOTdfFxV4QXMiUnfXSBnkXGSDNNWAaAvLMlUNNXBjt9voEgjtn6n%2F7nf%2FAw%3D%3D&RelayState=ver%3A3-hint%3A4739458502289622-ETMsDgAAAaDuhlKGABRBRVMvQ0JDL1BLQ1M1UGFkZGluZwEAABAAEHU1mtQmBy4%2BrxITaOZTKWEAAACgLXPuKtnIo3W%2F0g%2FGioVLPeXAeAlI%2BevYg4BImakwMHIbkYi6S4VxLlAn96WPKPu1FzokqyH2ZYEDTY7kne%2B%2BZeHb0N34GxJEYXw7%2BxsExbCMPw19rErwoE1odcBJutFk3xxAbz3re%2BchUMNepcnNqHkMQmJ3ZYb%2B2ck3yxdYa4ZMLzD3U0T81WlepcZfx2XcAuw1dgN6ia0fwny0%2BLQTkgAUU6NnfattuiNXSx%2BZ9ebmtI1LOd0%3D to authenticate...
+A browser window should have opened for you to complete the login. If you can't see it, check existing browser windows, or your OS settings.
 Connected as role=SSO_SNOWFLAKE_GAI_SVC_RO, warehouse=GAI_POC
 
 Sending question from: C10933609_ERT.txt
@@ -6,100 +9,64 @@ Prompt length: 5,261 characters
 Answer:
 
 
-**Case C10933609 — Loss Of Signal on ETH10G-1-4-4 at sdsc-dc-cien-east-02**
+**Analysis of [Case C10933609](https://ciena.lightning.force.com/lightning/r/Case/500VR00000qU63vYAC/view) — LOS on ETH10G-1-4-4 at sdsc-dc-cien-east-02**
 
-**Product:** 6500 | **Customer:** Rady Children's Health | **Priority:** Critical/Outage | **Status:** New (opened today)
-
----
-
-**Step 1 — Extracted Anchors**
-
-- **Alarm:** Loss Of Signal (LOS), Condition Type LOS, Doc ID 0673
-- **Subsystem:** ETH10G (Layer 1 Ethernet 10G client interface)
-- **Node:** sdsc-dc-cien-east-02 (Data Center)
-- **Interface:** Eth10G-1-4-4 (Shelf 1, Slot 4, Port 4)
-- **Direction:** Near end, Receive
-- **Impact:** Service affecting, Critical severity
-- **Software:** N/A (not recorded)
-- **Nothing ruled out yet**
+**Product:** 6500 | **Customer:** RADY CHILDREN'S HEALTH | **Priority:** Critical (Outage) | **Status:** Customer Process
 
 ---
 
-**Step 2 — Merge Stats**
+**Search anchors extracted:**
+- **Alarms:** Loss of Signal (LOS) on ETH10G-1-4-4 (near end, receive), Remote Fault on far-end acp-dc-ciena-east-02 1-4-4
+- **Nodes:** sdsc-dc-cien-east-02, acp-dc-ciena-east-02
+- **Subsystem:** ETH10G client port, Shelf 1 / Slot 4 / Port 4
+- **Ruled out:** Nothing yet; alarms disabled at both ends per customer request; customer dispatching tech to investigate
 
-- Round 1 total candidates (before dedup): ~205
-- Round 2 total candidates (before dedup): ~20
-- Merged unique candidates: ~210
-- Cases found in BOTH rounds: ~9
-- Cases found ONLY in Round 1: ~196
-- Cases found ONLY in Round 2: ~5 (C10905041, C10879104, C10909672, C10808924, C10825512)
-
----
-
-**Step 3 — Pre-Ranking Checklist**
-
-- [x] Same-customer query ran (Pass 1)
-- [x] Same node names searched (Pass 3: sdsc-dc-cien, nhp-dc-cien, sdsc-dc)
-- [x] Description searched in every pass
-- [x] No truncation issues requiring rerun
-- [x] Ranked by technical overlap, not date
-- [x] No date-based ORDER BY in any query
+**Merge stats:** R1 ~208 raw → ~201 unique | R2 ~37 raw → ~31 unique | Merged ~213 unique | ~19 in both rounds | ~182 only R1 | ~14 only R2
 
 ---
 
-**Step 3 — Top 10 Similar Cases (ranked by technical overlap)**
+### 1. Most likely root causes
 
-1. **C10844188** — Rady Children's | sdsc-dc-cien-**west**-02 | LOF_PCS on ETHN Slot 1-1-3 | Closed | **SFP replaced** → resolved. Same customer, same DC, same device family.
-2. **C10905042** — Rady Children's | sdsc-dc-cien-**west**-02 | Line card interface down | Closed | **Pluggable replaced + fiber replaced at nhp side** → resolved. RCA: Ciena HW – Pluggable.
-3. **C10905041** — Rady Children's | Line card interface down | Closed | Resolved by Knowledge Article (Optical Line Fail).
-4. **C10796185** — Rady Children's | nhp-dc-ciena-west-02 & sdsc-dc-ciena-west-02 down | Closed | Self-cleared; originated from 3rd-party device.
-5. **C10797132** — Verizon | ETH10G-1-1-2 Loss Of Signal on 6500 REL1263Z | Closed | **Faulty SP (Shelf Processor) replaced** → resolved. RCA: Ciena HW – SP.
-6. **C10863093** — Pfizer | ETH10G LOS + Remote Fault + Encryption Failure | Closed | **OTR card port + optical module replaced** → resolved. RCA: Ciena HW.
-7. **C10876723** — Claro Colombia | ETH10G Loss Of Clock (OTM2) | Closed | **SFP pluggable NTK583AA replaced** → resolved. RCA: Ciena HW – Pluggable.
-8. **C10799268** — Cirion | ETH10G Loss Of Clock / Loss Of Frame | Closed | **SFP replaced** → resolved. RCA: Ciena HW – Pluggable.
-9. **C10823086** — Emirates | ETH10G link down | Closed | NOC **swapped SFP to another slot** → errors cleared. RCA: Recovered by HW Reset.
-10. **C10855733** — Meridian Health | ETH10G Remote Fault + OTM2 LOS, identical alarm format to current case | Closed | Resolved by customer.
+- **Faulty SFP/pluggable at local or far-end port** — This is the dominant pattern in Rady's own history. Per [Case C10844188](https://ciena.lightning.force.com/lightning/r/Case/500VR00000iB2VxYAK/view) (same customer, same DC family sdsc-dc-cien-west-02), a LOF_PCS/LOS on an ETH-class port was resolved by SFP replacement. Per [Case C10905042](https://ciena.lightning.force.com/lightning/r/Case/500VR00000opGVaYAM/view) (same customer, same node), a line card interface down was resolved by pluggable + fiber replacement at the nhp side. Across all 6500 ETH10G LOS cases, faulty pluggable (RCA3 = "OME 6500 - 017 Pluggable") is the single most common Ciena-attributable root cause.
+- **Physical-layer issue: fiber patch cord, patch panel, or CPE-side cable** — The LOS is receive-direction on the near end, with Remote Fault on the far end, which classically points to loss of light arriving at sdsc-dc-cien-east-02. Per [Case C10866360](https://ciena.lightning.force.com/lightning/r/Case/500VR00000j3U9yYAE/view) (same customer, same far-end node ACP-DC-CIENA-EAST), an interface down was resolved by replacing the pluggable at the 3rd-party client device.
+- **Transient hit / self-clearing event** — The largest cohort of ETH10G LOS cases across all customers (>60%) clears before isolation ("brief hit"). If the alarm clears within minutes, the root cause remains indeterminate but is typically attributed to a momentary fiber disturbance, power flicker, or CPE transient.
 
----
+### 2. Debugging steps/commands to try
 
-**Step 4 — Diagnostic Summary**
+- **Check optical Rx power on ETH10G-1-4-4 at sdsc-dc-cien-east-02** — if Rx power is absent or very low (below threshold), the light path from the far end is broken. Compare to the port's expected receive power baseline.
+- **Check optical Tx power on ETH10G-1-4-4 at far-end acp-dc-ciena-east-02** — confirm the far-end transmitter is still lasing. If Tx is normal but near-end Rx is absent, the fault is in the fiber span or intermediate patchcord.
+- **Inspect the SFP/pluggable at both ends** — reseat or swap the pluggable in Shelf 1 Slot 4 Port 4 at both sdsc-dc-cien-east-02 and acp-dc-ciena-east-02. This was the resolution path in cases C10844188, C10905042, and C10876723.
+- **Verify fiber patch cord and patch-panel integrity** — per case [C10900142](https://ciena.lightning.force.com/lightning/r/Case/500VR00000nMwKIYA0/view) (BT Openreach), missing or loose CPE interface cables caused the exact same LOS+Remote Fault pattern and were resolved by replacing the cables.
+- **Check PM history (pre-fault OPR trend)** — look for gradual Rx power degradation before the LOS event, which would indicate a developing fiber or pluggable issue, vs. an instantaneous drop pointing to a discrete event (fiber cut, cable pull, CPE action).
 
-**1. Most Likely Root Causes**
-- **Faulty SFP/pluggable optic** in Slot 4 — this is the dominant root cause across the top matches (per C10844188, C10905042, C10876723, C10799268, C10823086, all closed as Ciena HW – Pluggable)
-- **Dirty or damaged fiber patch cord / connector** on the Rx side of ETH10G-1-4-4 (per C10905042 where fiber was also replaced)
-- **Far-end (CPE) equipment issue** — the connected device may have dropped the link (per C10796185 where origin was 3rd-party, and per numerous brief-hit LOS cases in the broader pool)
-- **Line card / MUX card failure** on the 10x10G MUX hosting Slot 4 (per C10797132 SP replacement, C10863093 OTR card replacement, C10863912 10x10G MUX card replacement)
+### 3. Known log/alarm signatures to look for
 
-**2. Debugging Steps / Commands**
-- Check **Rx optical power** on ETH10G-1-4-4 via `rtrv-pm` or Site Manager Performance Monitoring (OPR-OCH monitor, Near end, Receive) — absent or low dBm confirms physical-layer loss
-- **Inspect and clean** fiber connectors on both ends of the link into Slot 4, Port 4
-- **Verify far-end port status** — confirm the device connected to this port is powered on and transmitting
-- **Reseat the SFP** in Slot 4, Port 4; if LOS persists, attempt seating it in an **alternate port** on the same card to rule out SFP vs. port fault (per C10823086)
-- Check whether **other ports on the same line card** (Slot 4) are affected — if multiple ports show alarms, suspect card-level failure rather than a single pluggable
+- **LOS (0673) on ETH10G, Near End, Receive** — the primary alarm; indicates no light on the receive path.
+- **Remote Fault (REM_FLT, 0675) on ETH10G at the far end** — expected companion alarm confirming the far end detects that the near end is not receiving. Already present on acp-dc-ciena-east-02.
+- **LOF_PCS (1297) or Loss Of Clock (RTCLK, 0843)** — if these appear alongside LOS, they indicate the link was partially up before failing, vs. a clean cable pull.
+- **Rx Power Out Of Range (RX_PWR_OOR_OCH)** — would indicate degrading light levels rather than total loss; if seen in PM history, suggests pluggable degradation.
+- **Far End Client Signal Fail (FECRF, 0695)** — downstream cascade alarm; confirms the transport layer has lost the client signal.
 
-**3. Known Log / Alarm Signatures to Look For**
-- **LOS** (Doc ID 0673) on ETH10G, Near end, Receive — the active alarm on this case
-- **LOF_PCS** (Doc ID 0677) — Loss Of Frame often co-occurs with LOS and confirms the physical signal is gone
-- **RTCLK** (Doc ID 0843) — Loss Of Clock, another co-occurring alarm on the same interface class
-- **REM_FLT** (Doc ID 0675) — Remote Fault, which would appear on the **far-end** device if it detects the signal loss
-- If the alarm **flaps** (clears then re-raises), suspect an intermittent pluggable or loose fiber rather than a clean break
+### 4. Most likely resolution path
 
-**4. Most Likely Resolution Path**
-- **Step A:** Verify Rx optical power. If zero/absent → physical layer fault confirmed.
-- **Step B:** Clean and reseat the SFP in ETH10G-1-4-4. Per historical data, **SFP/pluggable replacement resolved the majority of similar cases** (C10844188, C10905042, C10876723, C10799268, C10823086).
-- **Step C:** If SFP replacement does not restore signal, **replace the fiber patch cord** between the Ciena port and the connected device (per C10905042).
-- **Step D:** If fiber and SFP are ruled out, **check the far-end device port** — it may require a port reset or SFP replacement on its side (per C10879419, C10880493).
-- **Step E:** If signal still absent after all above, escalate to evaluate the **line card** in Slot 4 for possible card-level failure (per C10797132 SP replacement, C10863912 MUX card replacement) and initiate RMA if warranted.
+- **Dispatch tech to sdsc-dc-cien-east-02 Data Center** (already requested as next step). Priority action sequence:
+  1. Visually inspect the fiber patch cord on Shelf 1, Slot 4, Port 4 — check for kinks, bends, disconnection, or contamination.
+  2. Clean both fiber end-faces (both ends of the patch cord and the SFP connector).
+  3. If LOS persists, swap the SFP/pluggable at sdsc-dc-cien-east-02 port 1-4-4. This resolved the issue in 3 of 4 prior Rady cases with hardware attribution (C10844188, C10905042, C10876723 pattern).
+  4. If still unresolved, swap the SFP at the far-end acp-dc-ciena-east-02 port 1-4-4 — per case C10866360, the pluggable at the 3rd-party client device was the culprit on this same far-end node.
+  5. If both pluggables are ruled out, test the fiber span between the two nodes with a light source / power meter or OTDR.
 
 ---
 
-The Snowflake AI Intelligence uses generative AI and may produce errors. Users are responsible for validating all output; use is not approved for financial reporting related activities or other applications with low margin of error. In the event of erroneous or questionable output please contact mnewman@ciena.com
+*Ranked from historical evidence across 213 product-gated candidates. The top 4 matches are from the same customer and same network environment. Ciena HW Pluggable (OME 6500 - 017) is the most frequent actionable RCA in ETH10G LOS cases with Ciena attribution.*
+
+The Snowflake AI Intelligence uses generative AI and may product errors. Users are responsible for validating all output; use is not approved for financial reporting related activities or other applications with low margin of error. In the event of erroneous or questionable output please contact mnewman@ciena.com
 
 ========================================
-Round-trip time: 4m 19.34s
+Round-trip time: 4m 9.54s
 ========================================
 
 Suggested follow-ups:
-  - Can you pull the full case narrative for C10844188 and C10905042? I want to see the detailed troubleshooting steps taken on those prior Rady Children's cases since they involved the same sdsc-dc-cien nodes.
-  - Are there any other open or recent cases for Rady Children's Health on the 6500 platform that might indicate a broader pattern at this site?
-  - Can you check if there are any Knowledge Articles linked to the top similar cases, especially around ETH10G LOS or pluggable replacement procedures on the 6500?
+  - Can you show me the full detail and case narrative for C10844188? That's the closest same-customer match with the SFP replacement resolution.
+  - Has RADY CHILDREN'S HEALTH had any other 6500 cases in the last 12 months beyond the ones surfaced here? I want to see the full account case history.
+  - Pull up the diagnostic pathway and resolution steps from C10875764 — that Equinix case with the dual-leg LOS and pluggable replacement. I want to compare it to our current scenario.
