@@ -1,6 +1,7 @@
 import logging
+from datetime import datetime
 
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.INFO)
 
 import os
 import re
@@ -25,6 +26,12 @@ if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
 # ==========================================
 # 2. TARGET CHANNELS CONFIGURATION
 # ==========================================
+CHANNEL_MAP = {
+    "C0C4051R9SN": "#di-test",
+    "C09GV7JFGV7": "#cpo-broadband-team",
+    "C08PFDQM5M0": "#ert-active-outages-channel"
+}
+
 TARGET_CHANNEL_IDS = [
     "C0C4051R9SN",  # #di-test
     "C09GV7JFGV7"  # #cpo-broadband-team
@@ -52,7 +59,6 @@ def create_ert_prompt_file(case_number: str) -> str:
     with open(output_filename, "w", encoding="utf-8") as f:
         f.write(prompt_content)
 
-    # print(f"💾 Created prompt file: {output_filename}")
     return output_filename
 
 
@@ -72,6 +78,13 @@ def handle_incoming_case_request(event, say):
     if channel_id not in TARGET_CHANNEL_IDS:
         return
 
+    # Generate timestamp and resolve channel name
+    timestamp = datetime.now().strftime("%d%b%y-%I:%M:%S %p")
+    channel_name = CHANNEL_MAP.get(channel_id, "unknown-channel")
+
+    print(f"{timestamp} : [#{channel_name}] API Interface for Python")
+    print(f"{timestamp} : [#{channel_name}] Incoming Text from <@{user}>: {text}")
+
     case_match = re.search(r'Snowball\s+(C\d{7,10})', text, re.IGNORECASE)
     if not case_match:
         case_match = re.search(r'\b(C\d{7,10})\b', text, re.IGNORECASE)
@@ -83,6 +96,8 @@ def handle_incoming_case_request(event, say):
             text=f"Hi <@{user}>, detected case **{case_number}**. Generating ERT prompt file from template...",
             thread_ts=message_ts
         )
+        print(
+            f"{timestamp} : [#{channel_name}] Hi <@{user}>, detected case **{case_number}**. Generating ERT prompt file from template...")
 
         try:
             saved_filename = create_ert_prompt_file(case_number)
@@ -90,14 +105,14 @@ def handle_incoming_case_request(event, say):
                 text=f"✅ Successfully generated prompt file: `{saved_filename}` for case `{case_number}`. Sending to Snowflake...\nIt will take ~ 5 mins to get a response!!",
                 thread_ts=message_ts
             )
+            print(
+                f"{timestamp} : [#{channel_name}] Successfully generated prompt file: {saved_filename} for case {case_number}. Sending to Snowflake...\nIt will take ~ 5 mins to get a response!!")
 
             # mcp_python_exe = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\.venv\Scripts\python.exe"
             # mcp_script_path = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\call_snfl.py"
 
             mcp_python_exe = r"C:\Users\asalgado\PycharmProjects\SnF_MCP_Test\.venv\Scripts\python.exe"
             mcp_script_path = r"C:\Users\asalgado\PycharmProjects\SnF_MCP_Test\call_snfl.py"
-
-            # print(f"🚀 Triggering call_snfl.py for {case_number} via subprocess...")
 
             # Capture in memory cleanly
             result = subprocess.run(
@@ -120,10 +135,8 @@ def handle_incoming_case_request(event, say):
             # latin1 prevents the 'charmap' crash because it perfectly maps all 256 byte values
             try:
                 mcp_output = mcp_output.encode("latin1", errors="ignore").decode("utf-8", errors="replace")
-                # print("✨ Successfully cleaned garbled text encoding.")
             except Exception as decode_err:
                 pass
-                # print(f"⚠️ Translation fallback triggered: {decode_err}")
 
             output_filename = f"{case_number}_snfl_op.txt"
             with open(output_filename, "w", encoding="utf-8") as out_f:
@@ -138,33 +151,37 @@ def handle_incoming_case_request(event, say):
                 text=formatted_reply,
                 thread_ts=message_ts
             )
+            print(f"{timestamp} : [#{channel_name}] Posted final Snowflake Cortex Analysis for Case {case_number}.")
 
         except subprocess.TimeoutExpired:
             say(
                 text=f"⚠️ Sorry <@{user}>, the Snowflake query for {case_number} took longer than 10 minutes and timed out.",
                 thread_ts=message_ts
             )
+            print(f"{timestamp} : [#{channel_name}] Error: Subprocess timed out for case {case_number}.")
         except subprocess.CalledProcessError as e:
             say(
                 text=f"❌ An error occurred while executing `call_snfl.py` for {case_number}.",
                 thread_ts=message_ts
             )
+            print(f"{timestamp} : [#{channel_name}] Error: Subprocess execution failed for {case_number}.")
         except Exception as e:
             say(
                 text=f"Sorry <@{user}>, an error occurred: {str(e)}",
                 thread_ts=message_ts
             )
+            print(f"{timestamp} : [#{channel_name}] Error: {str(e)}")
     else:
         if "snowball" in text.lower():
             say(
                 text=f"Hi <@{user}>, I detected 'Snowball' but couldn't parse a valid case number format.",
                 thread_ts=message_ts
             )
+            print(f"{timestamp} : [#{channel_name}] Detected 'Snowball' but couldn't parse case number.")
 
 
 # ==========================================
 # 5. EXECUTION
 # ==========================================
 if __name__ == "__main__":
-    # print(f"⚡️ Slack ERT Listener active! Monitoring {len(TARGET_CHANNEL_IDS)} channels...")
     SocketModeHandler(app, SLACK_APP_TOKEN).start()
