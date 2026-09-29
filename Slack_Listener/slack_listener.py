@@ -10,7 +10,7 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 # ==========================================
-# 1. ENVIRONMENT & TOKEN CONFIGURATION
+# 1. ENVIRONMENT & TOKEN CONFIGURATION V1
 # ==========================================
 #env_path = r"C:\Users\ravi\PycharmProjects\Slack_Chatalert\.env"
 env_path = r"C:\Users\asalgado\PycharmProjects\Slack_Chatalert\.env"
