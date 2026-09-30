@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-#logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 
 import os
 import re
@@ -40,13 +40,22 @@ TARGET_CHANNEL_IDS = [
 
 app = App(token=SLACK_BOT_TOKEN)
 
+# ==========================================
+# 3. CODEWORD & TEMPLATE CONFIGURATION
+# ==========================================
+# Easily add more code words and map them to their specific templates here
+PROMPT_TEMPLATES = {
+    "snowball": "ERT_Prompt_C.txt",
+    "snowpick": "ERT_Prompt_S.txt"
+}
+# Fallback codeword if a user just types a case number without a keyword
+DEFAULT_CODEWORD = "snowball"
+
 
 # ==========================================
-# 3. TEMPLATE LOADING & PROMPT GENERATION
+# 4. TEMPLATE LOADING & PROMPT GENERATION
 # ==========================================
-def create_ert_prompt_file(case_number: str) -> str:
-    template_filename = "ERT_Prompt_Snowflake wo Product.txt"
-
+def create_ert_prompt_file(case_number: str, template_filename: str) -> str:
     if not os.path.exists(template_filename):
         raise FileNotFoundError(f"Could not find template file: {template_filename}")
 
@@ -63,7 +72,7 @@ def create_ert_prompt_file(case_number: str) -> str:
 
 
 # ==========================================
-# 4. SLACK EVENT LISTENER & HANDLER
+# 5. SLACK EVENT LISTENER & HANDLER
 # ==========================================
 @app.event("message")
 def handle_incoming_case_request(event, say):
@@ -85,22 +94,37 @@ def handle_incoming_case_request(event, say):
     print(f"{timestamp} : [#{channel_name}] API Interface for Python")
     print(f"{timestamp} : [#{channel_name}] Incoming Text from <@{user}>: {text}")
 
-    case_match = re.search(r'Snowball\s+(C\d{7,10})', text, re.IGNORECASE)
-    if not case_match:
-        case_match = re.search(r'\b(C\d{7,10})\b', text, re.IGNORECASE)
+    # Dynamically build a regex to look for any of the configured code words
+    keywords_pattern = "|".join(PROMPT_TEMPLATES.keys())
 
-    if case_match:
-        case_number = case_match.group(1).upper()
+    # Notice the double curly braces {{7,10}} to escape them in the f-string
+    keyword_match = re.search(rf'({keywords_pattern})\s+(C\d{{7,10}})', text, re.IGNORECASE)
+
+    case_number = None
+    selected_codeword = None
+
+    if keyword_match:
+        selected_codeword = keyword_match.group(1).lower()
+        case_number = keyword_match.group(2).upper()
+    else:
+        # Fallback: Check if they just typed a case number without a code word
+        bare_case_match = re.search(r'\b(C\d{7,10})\b', text, re.IGNORECASE)
+        if bare_case_match:
+            case_number = bare_case_match.group(1).upper()
+            selected_codeword = DEFAULT_CODEWORD
+
+    if case_number:
+        template_file = PROMPT_TEMPLATES[selected_codeword]
 
         say(
-            text=f"Hi <@{user}>, detected case **{case_number}**. Generating ERT prompt file from template...",
+            text=f"Hi <@{user}>, detected case **{case_number}** using codeword `{selected_codeword}`. Generating ERT prompt file from `{template_file}`...",
             thread_ts=message_ts
         )
         print(
-            f"{timestamp} : [#{channel_name}] Hi <@{user}>, detected case **{case_number}**. Generating ERT prompt file from template...")
+            f"{timestamp} : [#{channel_name}] Hi <@{user}>, detected case **{case_number}** using codeword `{selected_codeword}`. Generating ERT prompt file from `{template_file}`...")
 
         try:
-            saved_filename = create_ert_prompt_file(case_number)
+            saved_filename = create_ert_prompt_file(case_number, template_file)
             say(
                 text=f"✅ Generated prompt: `{saved_filename}` for `{case_number}`. Sending to Snowflake... Response in ~ 5 mins!!",
                 thread_ts=message_ts
@@ -172,16 +196,19 @@ def handle_incoming_case_request(event, say):
             )
             print(f"{timestamp} : [#{channel_name}] Error: {str(e)}")
     else:
-        if "snowball" in text.lower():
-            say(
-                text=f"Hi <@{user}>, I detected 'Snowball' but couldn't parse a valid case number format.",
-                thread_ts=message_ts
-            )
-            print(f"{timestamp} : [#{channel_name}] Detected 'Snowball' but couldn't parse case number.")
+        # Dynamically check if they typed any valid keyword but messed up the case number format
+        for keyword in PROMPT_TEMPLATES.keys():
+            if keyword in text.lower():
+                say(
+                    text=f"Hi <@{user}>, I detected '{keyword}' but couldn't parse a valid case number format.",
+                    thread_ts=message_ts
+                )
+                print(f"{timestamp} : [#{channel_name}] Detected '{keyword}' but couldn't parse case number.")
+                break
 
 
 # ==========================================
-# 5. EXECUTION
+# 6. EXECUTION
 # ==========================================
 if __name__ == "__main__":
     SocketModeHandler(app, SLACK_APP_TOKEN).start()
