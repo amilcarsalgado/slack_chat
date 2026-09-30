@@ -125,7 +125,7 @@ def handle_incoming_case_request(event, say):
                 thread_ts=message_ts
             )
             print(
-                f"{timestamp} : [#{channel_name}] Successfully generated prompt file: {saved_filename} for case {case_number}. Sending to Snowflake...\nIt will take ~ 5 mins to get a response!!")
+                f"{timestamp} : [#{channel_name}] Generated prompt: {saved_filename} for {case_number}. Sending to Snowflake...  It will take ~ 5 mins to get a response!!")
 
             # mcp_python_exe = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\.venv\Scripts\python.exe"
             # mcp_script_path = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\call_snfl.py"
