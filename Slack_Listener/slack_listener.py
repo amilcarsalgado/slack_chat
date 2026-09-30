@@ -27,9 +27,9 @@ if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
 # 2. TARGET CHANNELS CONFIGURATION
 # ==========================================
 CHANNEL_MAP = {
-    "C0C4051R9SN": "#di-test",
-    "C09GV7JFGV7": "#cpo-broadband-team",
-    "C08PFDQM5M0": "#ert-active-outages-channel"
+    "C0C4051R9SN": "di-test",
+    "C09GV7JFGV7": "cpo-broadband-team",
+    "C08PFDQM5M0": "ert-active-outages-channel"
 }
 
 TARGET_CHANNEL_IDS = [
@@ -79,7 +79,7 @@ def handle_incoming_case_request(event, say):
         return
 
     # Generate timestamp and resolve channel name
-    timestamp = datetime.now().strftime("%d%b%y-%I:%M:%S %p")
+    timestamp = datetime.now().strftime("%d-%b-%y_%I:%M:%S%p")
     channel_name = CHANNEL_MAP.get(channel_id, "unknown-channel")
 
     print(f"{timestamp} : [#{channel_name}] API Interface for Python")
@@ -102,7 +102,7 @@ def handle_incoming_case_request(event, say):
         try:
             saved_filename = create_ert_prompt_file(case_number)
             say(
-                text=f"✅ Successfully generated prompt file: `{saved_filename}` for case `{case_number}`. Sending to Snowflake...\nIt will take ~ 5 mins to get a response!!",
+                text=f"✅ Generated prompt: `{saved_filename}` for `{case_number}`. Sending to Snowflake... Response in ~ 5 mins!!",
                 thread_ts=message_ts
             )
             print(

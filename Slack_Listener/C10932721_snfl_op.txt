@@ -1,76 +1,105 @@
-Connected as role=SSO_SNOWFLAKE_GAI_SVC_RO, warehouse=GAI_POC
+**Case C10932721 — Analysis & Similar Case Results**
 
-Sending question from: C10932721_ERT.txt
-Prompt length: 5,261 characters
-
-Answer:
-
-
-**Analysis of [Case C10932721](https://ciena.lightning.force.com/lightning/r/Case/500VR00000qPvDFYA0/view)** — **6500 | COMCAST CORPORATION | REL1560Z.PS | cn1a.newhanover.pa | Shelf 4 | MBR_SHLF_UNRCHABLE**
+**Product:** 6500 · **Customer:** COMCAST CORPORATION · **Software:** REL1560Z.PS (Release 15.6 v4 GA)
+**Node:** cn1a.newhanover.pa · **Shelf:** 4 · **Status:** Recovery (open)
 
 ---
 
-**Extracted Anchors:** Alarm MBR_SHLF_UNRCHABLE (Member Shelf Unreachable) on Logical Shelf 4, Class COM, NSA, Frame ID RR101.13, Documentation Id 0717. No cards explicitly called out; no prior actions or ruled-out items documented yet. Business impact is Loss of Management/Visibility. Case opened today (Sep 28 2026), early-stage with only system-generated emails.
+**Step 1 — Extracted Anchors**
 
-**Retrieval Stats (8 passes, 2 rounds):** ~125 unique 6500 candidates after dedup across same-customer alarm searches, node-name searches, and cross-customer MBR_SHLF searches. Ranked by alarm/subsystem overlap → customer/network context → resolution transferability → software proximity. No date-based sorting applied.
-
----
-
-### 1. Most Likely Root Causes
-
-- **Faulty Shelf Processor (SP) card on Shelf 4** — the dominant root cause across 60%+ of resolved MBR_SHLF_UNRCHABLE cases on 6500 (per C10909471, C10832398, C10860987, C10873988, C10813026, C10908668, C10910678, C10884233, and many others). RCA2 consistently maps to "Ciena HW → SP, CTM, WCS, CP."
-- **ILAN / LAN cable fault between primary shelf and Shelf 4** — bad or loose patch cable on ILAN-IN/ILAN-OUT ports preventing OSPFv2 adjacency (per C10829390, C10825884, C10815543). The ILAN path carries inter-shelf management traffic; a single bad cable can isolate the member shelf.
-- **SPAP memory exhaustion from excessive IP routes** — per C10923793 (also Shelf 4, MBR_SHLF_UNRCHABLE), the SP's SPAP process ran out of slab memory because >550 routes exceeded the 500-route limit for releases ≤12.85. Rel 15.6 raises that threshold, but if DCN architecture is dense, this remains possible. Self-recovers via autonomous warm restart.
-- **Transient power event or brief network hit** — several NSA cases cleared automatically within minutes (per C10861748, C10828823, C10857361). However, since the alarm in this case was raised Sep 26 and is still standing Sep 28, a self-clearing transient is less likely.
-
-### 2. Debugging Steps / Commands to Try
-
-- **Check SP LED status on Shelf 4** — dispatch or ask on-site tech to verify SP slot 15 (and 16 if protected). Solid green = healthy; red steady or blinking green = fault. Compare against adjacent working shelves.
-- **Attempt local craft-port login to Shelf 4 SP** — connect a laptop to the craft Ethernet port on SP-4-15. If login succeeds, collect Active Alarms, Historical Fault Browser, Shelf Inventory, and RTRV LOG immediately. If login fails, the SP is likely non-functional.
-- **Verify ILAN connectivity** — from the primary shelf, check `comms ospfv2 circuit show` for ILAN ports facing Shelf 4. Confirm LAN Link Failure (NET) and OSPFv2 Adjacency Loss (LAN_OSPF_FAIL) presence. Have tech reseat ILAN-IN/ILAN-OUT patch cables.
-- **If accessible, attempt SP switchover** — if the shelf has 1+1 SP protection, switch active from SP-4-15 to SP-4-16 (or vice versa). Per C10873448 and C10829356, this can isolate whether one SP is faulting.
-- **Check for TDRF alarm** — if a Transport Data Recovery Failed alarm is present on Shelf 4, the DB is corrupt and a backup restore will be required after SP recovery (per C10860987, C10847504, C10892348).
-
-### 3. Known Log / Alarm Signatures to Look For
-
-- **MBR_SHLF_UNRCHABLE** (Doc ID 0717) on SHELF-4 — the standing alarm. Expect companion alarms: **LAN_OSPF_FAIL** on ILAN-x-IN / ILAN-x-OUT, **ADJUNR_OTS** (Adjacency Discovery Unreliable) on adjacent shelves, and possibly **LAN Link Failure (NET)** on COLAN ports.
-- **Software Subsystem Failed (SWSUBSYSFAIL)** on SP-4-15/16 — in multiple COMCAST cases on same release (C10859294, C10833748), this alarm preceded the shelf going unreachable. Check historical alarms for this signature prior to Sep 26.
-- **Cold Restart Completed / Warm Restart Completed** on SP-4-x — autonomous restarts indicate the SP recovered briefly and failed again, pointing to intermittent HW failure or memory exhaustion (C10843036, C10923793).
-- **Transport Data Recovery Failed (TDRF)** on Shelf 4 — appears when the SP boots but the database is corrupt. If present, a DB backup restore is mandatory before management can be recovered (C10860987, C10823076, C10846433).
-
-### 4. Most Likely Resolution Path
-
-- **Step 1: Reseat SP-4-15 (active SP)** — resolves ~20% of MBR_SHLF_UNRCHABLE cases outright (per C10908668, C10889208, C10848004). Monitor for alarm clearance for 5–10 minutes.
-- **Step 2: If reseat fails, replace SP card with same PEC and software release** — the single most common resolution across the dataset. Ensure the replacement SP carries the same REL1560Z.PS load; if not, seat it temporarily in another shelf to auto-upgrade before inserting into Shelf 4 (per C10813026, C10834077).
-- **Step 3: If TDRF appears after SP replacement, restore database from last known good backup** — use Site Manager's Configuration > Backup & Restore > Restore tab, pointing to the most recent DB file. This was the resolution in C10860987 (same software), C10847504, C10846433, and C10892348.
-- **Step 4: If shelf still unreachable after SP + DB restore, check ILAN patch cables and access panel** — replace ILAN cables between primary shelf and Shelf 4, and reseat/replace the Access Panel (NTK605MA) if ILAN link failure persists (per C10829390, C10884216, C10828275).
+- **Alarm:** MBR_SHLF_UNRCHABLE (Member Shelf Unreachable), Doc ID 0717, Class COM, SHELF type
+- **Subsystem:** COM / inter-shelf management communications
+- **Node:** cn1a.newhanover.pa, Frame ID RR101.13, Logical Shelf 4
+- **Hardware:** SP (Shelf Processor) slot 15 — reseated, still shows solid blue + solid LEDs, shelf remains unreachable
+- **Symptoms:** Primary shelf 1 raising MBR_SHLF_UNRCHABLE against shelf 4; SP reseat did not recover; no local login tools available onsite initially
+- **Ruled out:** SP reseat alone (already attempted, no recovery)
+- **Next customer action:** Tech Scott Evert arriving 9am EST 9/29 with SiteManager laptop, dongle, and spare SP
 
 ---
 
-**Key Reference Cases (same customer, same software):**
-- **C10909471** — COMCAST, REL1560Z.PS, cn01.gardner.ma, Member Shelf Unknown + Adjacency Discovery Unreliable → resolved by SP replacement + DB restore
-- **C10832398** — COMCAST, REL1560Z.OA, cn01.yarmouth.ma, Member Shelf Unknown shelf 13 → resolved by SP-13-41 replacement
-- **C10859294** — COMCAST, REL1560Z.PS, cn1a.norristown.pa (same NE naming pattern), Software Subsystem Failure → Member Shelf Unreachable → resolved by moving SP to another shelf for full release download
+**Step 2 — Merge Stats**
 
-**Additional strongly matching cases:** C10860987 (TELXIUS, REL1560Z.PS, TDRF + DB restore), C10923793 (APX, Shelf 4, SPAP memory exhaustion RCA), C10908668 (COMCAST, shelf unreachable resolved by SP reseat), C10910678 (TDC NET, SP replacement resolved member shelf unreachable).
+- Round 1 total candidates (before dedup): 102
+- Round 2 total candidates (before dedup): 85
+- Merged unique candidates: ~130
+- Cases found in BOTH rounds: ~18
+- Cases found ONLY in Round 1: ~72
+- Cases found ONLY in Round 2: ~40
 
 ---
 
-Would you like me to go deeper? Options:
-1. Full detail on a specific case above
-2. Knowledge Article recommendations
-3. Show the next ranked similar cases beyond the top 10
-4. Account-specific repeat pattern search within COMCAST CORPORATION
+**Step 3 — Top 10 Similar Cases** (ranked by technical overlap, not date)
+
+1. **C10908668** — COMCAST, 6500, REL1560Z.OA, Closed. Lost in-band access to shelf 3; SP-2 NTK555CA card 15 showing red+steady alarms with ILAN OSPF adjacency loss. **Resolved by SP-3-15 reseat.** Directly matches: same customer, same alarm domain, same SP slot, steady LED fault.
+
+2. **C10909471** — COMCAST, 6500, REL1560Z.PS, Closed. cn01.gardner.ma — MBR_SHLF_UNKNOWN + Adjacency Discovery Unreliable across multiple shelves. **Resolved by SP replacement + database restore.** Matches: same customer, same software, same alarm family.
+
+3. **C10832398** — COMCAST, 6500, REL1560Z.OA, Closed. cn01.yarmouth.ma — Member Shelf Unknown on shelf 13; both SPs showing fault; **SP-13-42 had solid blue light** before reseat (matching symptom). **Resolved by SP-13-41 replacement.** Key: blue LED on SP is a strong hardware fault indicator per this case.
+
+4. **C10929870** — COMCAST, 6500, REL1560Z.PS, Closed. cn1a.levittown.pa — loss of visibility to TIDc primary shelf; SP-1-15 unresponsive to DHCP/ping, link bouncing as though cycling resets. SP reseat had no effect. **Resolved after SP replacement + TDRF DB restore.** Matches: same customer, same software, same cn1a naming, SP reseat failure.
+
+5. **C10913327** — COMCAST, 6500, REL1560Z.OA, Closed. cn1c.norristown.pa — Database Integrity Fail; reseated SP 1-15 with no change, card showed failed LED; replaced SP, new card showed Ready/In Use but could not ping. **Resolved by DB restore after SP swap.** Matches: same customer, same network region (PA nodes), SP+DB compound issue.
+
+6. **C10910717** — TELEFONICA, 6500, REL1560Z.PS, Closed. Member Shelf Unreachable shelf 15 — SP suspected; upon local access found multiple internal mgmt comms suspected alarms indicating SP issue. **Resolved by SP replacement.** Matches: same software, same alarm, same SP-15 slot.
+
+7. **C10916901** — STC, 6500, REL1560Z.OA, Resolved. Member Shelf Unreachable; checked LAN cables but issue persisted. After shelf replacement, **original SP would not boot — SP replaced with spare, node recovered.** Matches: same alarm, SP boot failure.
+
+8. **C10903437** — NTT DOCOMO, 6500, REL1246Z, Closed. Detailed diagnostic procedure: check SP-15/SP-16 lamp status → craft Ethernet login → if no login, pull active SP, wait 15 min → if TDRF, restore backup → insert replacement SP. **Resolved by replacing active SP.** Key: contains a validated step-by-step recovery POA.
+
+9. **C10850057** — SEA-US, 6500, REL1550Z.SC, Closed. Member Shelf Unreachable active since Nov 2025; ILAN reseat, LAN cable change unsuccessful. **Ciena provided comprehensive POA:** local login via craft → collect logs → warm restart SP → cold restart SP → reseat SP → replace SP (escalating sequence). Case was closed pending MW.
+
+10. **C10859294** — COMCAST, 6500, REL1560Z.PS, Closed. cn1a.norristown.pa — SP-7-15 Software Subsystem Failure → cold reboot → shelf went unreachable with Member Shelf Unreachable + LAN Link Failure. Spare SP showed solid green Ready but Software Mismatch. **Resolved by moving SP to another shelf to download full release, then back.** Matches: same customer, same software, same cn1a naming; important edge case for software-mismatch scenario after SP swap.
+
+---
+
+**1. Most Likely Root Causes** (SP reseat already ruled out)
+
+- **Faulty SP card (hardware failure)** — overwhelmingly the #1 root cause across the candidate pool. RCA field "Ciena HW → (OME 6500 - 002) Shelf Processor" appears in ~60% of MBR_SHLF_UNRCHABLE cases. Solid blue LED after reseat is a strong indicator per C10832398.
+- **ILAN cable or access panel issue** — per C10829390 and C10884216, damaged ILAN patch cables or access panels between shelves can cause identical alarm patterns.
+- **SP database corruption (TDRF)** — per C10929870, C10913327, and C10860987, after SP replacement the shelf may land in TDRF requiring a database restore before management returns.
+
+**2. Debugging Steps/Commands to Try** (when tech arrives with SiteManager + dongle)
+
+- Connect laptop to **SP-4-15 craft Ethernet port** and attempt local login via SiteManager — if login succeeds, collect Active Alarms, Historical Fault Browser, Shelf Inventory, RTRV LOG before proceeding (per NTT Docomo procedure, C10903437)
+- If SP-4-15 does not respond to craft login: **pull SP-4-15, wait 15 minutes** — if shelf 4 has a standby SP (slot 16), it should take over (per C10903437 and C10873451)
+- If no standby SP or protection switch fails: **insert the spare SP** into slot 15
+- Post-insertion: verify LED states — expect blinking green (booting) then solid green (Ready) + In Use; solid blue with no transition = card not booting properly
+- Check **ILAN cable connections** between shelf 1 and shelf 4 for physical integrity (per C10829390, a damaged ILAN patch cable caused persistent alarm)
+
+**3. Known Log/Alarm Signatures to Watch For**
+
+- **TDRF (Transport Data Recovery Failed)** — may appear after SP replacement; do NOT panic, it means the new SP cannot sync the database and requires a manual DB restore (per C10860987, C10929870)
+- **SWLOAD / Incomplete Software Lineup** — if spare SP is a different software release, it will alarm; resolve by loading the correct release to the SP from a neighboring shelf or via FTP before committing (per C10859294)
+- **ADJUNR_OTS (Adjacency Discovery Unreliable)** — on primary shelf 1, indicates inter-shelf OSPF routing is disrupted
+- **LAN_OSPF_FAIL** — on ILAN ports, confirms the communication path between shelf 1 and shelf 4 is broken
+- **Circuit Pack Mismatch** — after inserting a replacement SP, if PEC or software doesn't match, this alarm fires; allow time for auto-upgrade or manually load software
+
+**4. Most Likely Resolution Path**
+
+- **Replace SP-4-15 with the spare SP** the tech is bringing — ensure the spare matches PEC and is loaded with REL1560Z.PS. If software version differs, seat the spare in a working shelf first to allow auto-upgrade (per C10859294, C10827703), then move it to shelf 4.
+- **If TDRF appears post-replacement:** restore from the last known good database backup via SiteManager (File option) — per C10860987, C10929870, C10846433 this is the standard recovery.
+- **If SP replacement + DB restore fails:** inspect and replace the ILAN patch cable between shelf 1 and shelf 4, and between shelf 4 and its adjacent shelf in the ILAN ring (per C10829390, a cable swap cleared persistent alarm).
+- **If the original SP is 1+1 protected (slot 15 + 16):** before replacing, attempt a protection switchover from shelf 1 debug to force the standby SP active and observe if the shelf becomes reachable (per C10873448).
+- **RMA the pulled SP** — per the pattern across these cases, the faulty SP typically does not reproduce the issue in lab (per C10843131) or fails to boot entirely.
+
+---
+
+Would you like me to go deeper on any of these? Options:
+1. Supporting similarity and knowledge evidence
+2. Recommended diagnostic pathway (step-by-step with source attribution)
+3. Full detail on a specific case
+4. Show the next ranked similar cases
+5. Search for Comcast-specific repeat patterns at cn1a.* nodes
 
 ---
 
 *The Snowflake AI Intelligence uses generative AI and may produce errors. Users are responsible for validating all output; use is not approved for financial reporting related activities or other applications with low margin of error. In the event of erroneous or questionable output please contact mnewman@ciena.com*
 
 ========================================
-Round-trip time: 3m 47.38s
+Round-trip time: 5m 11.23s
 ========================================
 
 Suggested follow-ups:
-  - Pull the full narrative and resolution details for case C10909471 — the COMCAST cn01.gardner.ma case on the same software release
-  - Are there any Knowledge Articles linked to the top matching cases for MBR_SHLF_UNRCHABLE on the 6500?
-  - Search for other recent cases on cn1a.newhanover.pa or other nodes at the same COMCAST site to check for environment-specific repeat patterns
+  - Show me the full detail on case C10908668 — I want to see the complete narrative and resolution steps since it's the closest Comcast match.
+  - Give me the recommended diagnostic pathway as a step-by-step procedure with source attribution from the similar cases.
+  - Search for Comcast-specific repeat patterns at cn1a nodes — are there recurring SP failures across that node naming convention?
