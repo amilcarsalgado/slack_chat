@@ -43,19 +43,18 @@ app = App(token=SLACK_BOT_TOKEN)
 # ==========================================
 # 3. CODEWORD & TEMPLATE CONFIGURATION
 # ==========================================
-# Easily add more code words and map them to their specific templates here
 PROMPT_TEMPLATES = {
     "snowball": "ERT_Prompt_C.txt",
-    "snowpick": "ERT_Prompt_S.txt"
+    "snowpic": "ERT_Prompt_S.txt",
+    "snowpick": "ERT_Prompt_S.txt"  # Catching the 'k' spelling variation just in case
 }
-# Fallback codeword if a user just types a case number without a keyword
 DEFAULT_CODEWORD = "snowball"
 
 
 # ==========================================
 # 4. TEMPLATE LOADING & PROMPT GENERATION
 # ==========================================
-def create_ert_prompt_file(case_number: str, template_filename: str) -> str:
+def create_ert_prompt_file(case_number: str, template_filename: str, codeword: str) -> str:
     if not os.path.exists(template_filename):
         raise FileNotFoundError(f"Could not find template file: {template_filename}")
 
@@ -63,7 +62,9 @@ def create_ert_prompt_file(case_number: str, template_filename: str) -> str:
         template_content = f.read()
 
     prompt_content = template_content.format(case_number=case_number)
-    output_filename = f"{case_number}_ERT.txt"
+
+    # Ensure generated text files have distinct names based on the codeword used
+    output_filename = f"{case_number}_{codeword.upper()}.txt"
 
     with open(output_filename, "w", encoding="utf-8") as f:
         f.write(prompt_content)
@@ -94,26 +95,20 @@ def handle_incoming_case_request(event, say):
     print(f"{timestamp} : [#{channel_name}] API Interface for Python")
     print(f"{timestamp} : [#{channel_name}] Incoming Text from <@{user}>: {text}")
 
-    # Dynamically build a regex to look for any of the configured code words
-    keywords_pattern = "|".join(PROMPT_TEMPLATES.keys())
+    # Step 1: Look for any valid case number in the message
+    case_match = re.search(r'\b(C\d{7,10})\b', text, re.IGNORECASE)
 
-    # Notice the double curly braces {{7,10}} to escape them in the f-string
-    keyword_match = re.search(rf'({keywords_pattern})\s+(C\d{{7,10}})', text, re.IGNORECASE)
+    if case_match:
+        case_number = case_match.group(1).upper()
+        text_lower = text.lower()
+        selected_codeword = DEFAULT_CODEWORD
 
-    case_number = None
-    selected_codeword = None
+        # Step 2: Search the message independently for any known codeword
+        for keyword in PROMPT_TEMPLATES.keys():
+            if keyword in text_lower:
+                selected_codeword = keyword
+                break
 
-    if keyword_match:
-        selected_codeword = keyword_match.group(1).lower()
-        case_number = keyword_match.group(2).upper()
-    else:
-        # Fallback: Check if they just typed a case number without a code word
-        bare_case_match = re.search(r'\b(C\d{7,10})\b', text, re.IGNORECASE)
-        if bare_case_match:
-            case_number = bare_case_match.group(1).upper()
-            selected_codeword = DEFAULT_CODEWORD
-
-    if case_number:
         template_file = PROMPT_TEMPLATES[selected_codeword]
 
         say(
@@ -124,7 +119,7 @@ def handle_incoming_case_request(event, say):
             f"{timestamp} : [#{channel_name}] Hi <@{user}>, detected case **{case_number}** using codeword `{selected_codeword}`. Generating ERT prompt file from `{template_file}`...")
 
         try:
-            saved_filename = create_ert_prompt_file(case_number, template_file)
+            saved_filename = create_ert_prompt_file(case_number, template_file, selected_codeword)
             say(
                 text=f"✅ Generated prompt: `{saved_filename}` for `{case_number}`. Sending to Snowflake... Response in ~ 5 mins!!",
                 thread_ts=message_ts
@@ -151,12 +146,11 @@ def handle_incoming_case_request(event, say):
 
             mcp_output = result.stdout.strip()
 
-            # 🛠️ THE FIX: Strip out Okta Auth and Metadata header
+            # 🛠️️ THE FIX: Strip out Okta Auth and Metadata header
             if "Answer:" in mcp_output:
                 mcp_output = mcp_output.split("Answer:", 1)[-1].strip()
 
             # 🛠️ THE FIX: Bulletproof Mojibake Translation using latin1
-            # latin1 prevents the 'charmap' crash because it perfectly maps all 256 byte values
             try:
                 mcp_output = mcp_output.encode("latin1", errors="ignore").decode("utf-8", errors="replace")
             except Exception as decode_err:
@@ -197,8 +191,9 @@ def handle_incoming_case_request(event, say):
             print(f"{timestamp} : [#{channel_name}] Error: {str(e)}")
     else:
         # Dynamically check if they typed any valid keyword but messed up the case number format
+        text_lower = text.lower()
         for keyword in PROMPT_TEMPLATES.keys():
-            if keyword in text.lower():
+            if keyword in text_lower:
                 say(
                     text=f"Hi <@{user}>, I detected '{keyword}' but couldn't parse a valid case number format.",
                     thread_ts=message_ts
