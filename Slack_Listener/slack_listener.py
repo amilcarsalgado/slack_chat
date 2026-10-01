@@ -29,13 +29,13 @@ if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
 CHANNEL_MAP = {
     "C0C4051R9SN": "di-test",
     "C09GV7JFGV7": "cpo-broadband-team",
-    "C08PFDQM5M0": "ert-active-outages-channel"
+    "C08PFDQM5M0": "active-outages-channel"
 }
 
 TARGET_CHANNEL_IDS = [
     "C0C4051R9SN",  # #di-test
     "C09GV7JFGV7"  # #cpo-broadband-team
-    # "C08PFDQM5M0"  # #ert-active-outages-channel
+    # "C08PFDQM5M0" # #active-outages-channel
 ]
 
 app = App(token=SLACK_BOT_TOKEN)
@@ -44,9 +44,9 @@ app = App(token=SLACK_BOT_TOKEN)
 # 3. CODEWORD & TEMPLATE CONFIGURATION
 # ==========================================
 PROMPT_TEMPLATES = {
-    "snowball": "ERT_Prompt_C.txt",
-    "snowpic": "ERT_Prompt_S.txt",
-    "snowpick": "ERT_Prompt_S.txt"  # Catching the 'k' spelling variation just in case
+    "snowball": "Snow_Prompt_S.txt",
+    "snowfall": "Snow_Prompt_C.txt",
+    "snowman": "Snow_Prompt_M.txt"
 }
 DEFAULT_CODEWORD = "snowball"
 
@@ -54,7 +54,7 @@ DEFAULT_CODEWORD = "snowball"
 # ==========================================
 # 4. TEMPLATE LOADING & PROMPT GENERATION
 # ==========================================
-def create_ert_prompt_file(case_number: str, template_filename: str, codeword: str) -> str:
+def create_prompt_file(case_number: str, template_filename: str, codeword: str) -> str:
     if not os.path.exists(template_filename):
         raise FileNotFoundError(f"Could not find template file: {template_filename}")
 
@@ -112,20 +112,20 @@ def handle_incoming_case_request(event, say):
         template_file = PROMPT_TEMPLATES[selected_codeword]
 
         say(
-            text=f"Hi <@{user}>, detected case **{case_number}** using codeword `{selected_codeword}`. Generating ERT prompt file from `{template_file}`...",
+            text=f"Hi <@{user}>, detected case **{case_number}** using codeword `{selected_codeword}`. Generating prompt file from `{template_file}`...",
             thread_ts=message_ts
         )
         print(
-            f"{timestamp} : [#{channel_name}] Hi <@{user}>, detected case **{case_number}** using codeword `{selected_codeword}`. Generating ERT prompt file from `{template_file}`...")
+            f"{timestamp} : [#{channel_name}] Hi <@{user}>, detected case **{case_number}** using codeword `{selected_codeword}`. Generating prompt file from `{template_file}`...")
 
         try:
-            saved_filename = create_ert_prompt_file(case_number, template_file, selected_codeword)
+            saved_filename = create_prompt_file(case_number, template_file, selected_codeword)
             say(
                 text=f"✅ Generated prompt: `{saved_filename}` for `{case_number}`. Sending to Snowflake... Response in ~ 5 mins!!",
                 thread_ts=message_ts
             )
             print(
-                f"{timestamp} : [#{channel_name}] Generated prompt: {saved_filename} for {case_number}. Sending to Snowflake...  It will take ~ 5 mins to get a response!!")
+                f"{timestamp} : [#{channel_name}] Successfully generated prompt file: {saved_filename} for case {case_number}. Sending to Snowflake...\nIt will take ~ 5 mins to get a response!!")
 
             # mcp_python_exe = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\.venv\Scripts\python.exe"
             # mcp_script_path = r"C:\Users\ravi\PycharmProjects\SnF_MCP_Test\call_snfl.py"
@@ -146,7 +146,7 @@ def handle_incoming_case_request(event, say):
 
             mcp_output = result.stdout.strip()
 
-            # 🛠️️ THE FIX: Strip out Okta Auth and Metadata header
+            # 🛠 THE FIX: Strip out Okta Auth and Metadata header
             if "Answer:" in mcp_output:
                 mcp_output = mcp_output.split("Answer:", 1)[-1].strip()
 
@@ -206,4 +206,5 @@ def handle_incoming_case_request(event, say):
 # 6. EXECUTION
 # ==========================================
 if __name__ == "__main__":
+    print(f"⚡️ Slack Listener active! Monitoring channels: {', '.join(CHANNEL_MAP.values())}")
     SocketModeHandler(app, SLACK_APP_TOKEN).start()
