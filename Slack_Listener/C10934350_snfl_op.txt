@@ -1,0 +1,69 @@
+**Analysis of [Case C10934350](https://ciena.lightning.force.com/lightning/r/Case/500VR00000qZIqpYAG/view)** — *6500 | REL1750Z.BW | Subsea ILA | High Received Span Loss @ vacILA1/SRA-41-1*
+
+Based on 30 closed 6500 cases with matching "High Received Span Loss" / SRA symptoms from the last 12 months, and the primary Knowledge Article [000001636](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000006kTBYAY/view) — *"OME 6500: High Received Span Loss alarm"*, here are the findings:
+
+---
+
+### 1. Most Likely Root Causes (ranked by historical frequency)
+
+- **Fiber / external plant degradation** — dirty connectors, faulty bulkheads, patch cord issues, or fiber damage. This was the dominant root cause in ~60% of analogous cases, including [Case C10924986](https://ciena.lightning.force.com/lightning/r/Case/500VR00000pRaGZYA0/view) (bulkhead replaced, fibers rolled), [Case C10929371](https://ciena.lightning.force.com/lightning/r/Case/500VR00000pxqdBYAQ/view) (bidirectional fiber loss, customer fiber MW), [Case C10924936](https://ciena.lightning.force.com/lightning/r/Case/500VR00000pPzPYYA0/view) (cleared after fiber cleaning), and [Case C10923190](https://ciena.lightning.force.com/lightning/r/Case/500VR00000p91yoYAA/view) (external fiber pair replacement).
+- **SRA (Raman) module hardware failure** — faulty SRA card causing persistent span loss. Resolved by SRA replacement in [Case C10927617](https://ciena.lightning.force.com/lightning/r/Case/500VR00000pieSbYAI/view) (SRA 1-1 port degraded, faceplate loss), [Case C10924801](https://ciena.lightning.force.com/lightning/r/Case/500VR00000pOq0AYAS/view) (SRA at ILA site, Circuit Pack Failed), and [Case C10930912](https://ciena.lightning.force.com/lightning/r/Case/500VR00000q9D89YAE/view).
+- **XLA / amplifier failure** — particularly relevant to this subsea/ILA context. [Case C10929366](https://ciena.lightning.force.com/lightning/r/Case/500VR00000pxw94YAA/view) (IMEWE subsea, HRSL at SRA-71-25) was resolved by **XLA C-Band replacement** (NTK552KA). This is the closest analog given your ILA subsea environment.
+- **Faulty OSC SFP or patch cord at OSC interface** — [Case C10926014](https://ciena.lightning.force.com/lightning/r/Case/500VR00000pcoL1YAI/view) saw span loss resolved after OSC SFP (NTK592NG) and patch cord replacement at the amplifier port.
+
+> **Note:** Transient "brief hits" are effectively **ruled out** since the alarm persists after circuits stabilized.
+
+---
+
+### 2. Debugging Steps / Commands to Try
+
+- **Log into vacILA1 via Site Manager** and review the HRSL alarm against SRA-41-1 in the **Current Alarms** menu (per **KA 000001636**).
+- **Navigate to Equipment → Facility Provisioning** → select the **ADJ-LINE** facility for SRA-41-1. Confirm whether **Current Span Loss exceeds Target Span Loss**.
+- **Check the Performance menu** on the SRA-41-1 module: compare current Rx optical level to its **Baseline**. A delta > 1 dB above target triggers HRSL.
+- **Apply KA 000001636 Correlation Rules:**
+  - If **OSC/TG span loss increases AND fiber span loss increases** → true physical fiber degradation (connectors, ODF, or fiber path).
+  - If **OSC/TG span loss increases BUT fiber span loss is stable** → early physical degradation not yet visible to amplified signal (OSC detects it first since it lacks Raman gain).
+  - If **OSC/TG span loss is stable BUT fiber span loss increases** → Raman gain or amplifier performance issue (SRA/XLA), not physical fiber.
+  - If **either measurement is fluctuating irregularly** → transient amplifier/Raman instability or intermittent fiber disturbance.
+- **Verify Rx/Tx fibers are not swapped** at both terminated points of the span — swapped fibers cause incorrect expected span loss calculation.
+- **Run `DGN-EQPT`** (TL1 command) against the SRA-41-1 module to check equipment diagnostics.
+- **Check far-end node** optical readings and OSC span loss for bidirectional comparison (as done in **Case C10930943**).
+
+---
+
+### 3. Known Log / Alarm Signatures to Look For
+
+- **`High Received Span Loss` on SRA-41-1** (SIGNAL_DEGRADE_OTS) — primary alarm, already active
+- **`Optical Line Fail`** on SRA ports — would indicate complete loss of optical signal, more severe
+- **`Circuit Pack Failed`** on SRA — if the card itself is failing (see KA [000001549](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR00000069BtYAI/view))
+- **`Automatic Shutoff Compromised`** — indicates OSC-related issue on the SRA/amplifier path (see KA [000001986](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka40z000000GtWhAAK/view))
+- **`OSC Loss Of Signal`** on the OSC port adjacent to SRA-41-1 — would confirm OSC SFP or fiber path issue
+- **`Adjacency Far End Not Discovered`** on the adjacent ADJ facility — indicates complete span communication breakdown
+- **`Gauge Threshold Crossing Alert Summary`** — check for Rx dips below baseline on SRA/AMP ports
+- **Faceplate loss readings** at 0m on the SRA port — elevated values indicate card-level port degradation (as seen in **Case C10927617**)
+
+---
+
+### 4. Most Likely Resolution Path
+
+Given the **persistent alarm after service stabilization** in a **subsea ILA environment**, and the strong analog from **Case C10929366** (IMEWE subsea):
+
+- **Step 1:** Perform the OSC vs. fiber span loss correlation analysis above to isolate whether this is a **physical fiber issue** or an **amplifier/Raman issue**.
+- **Step 2 (if fiber/physical):** Request onsite fiber inspection, OTDR trace, connector cleaning, and bulkhead verification on the span terminating at vacILA1 SRA-41-1. This resolved the majority of HRSL cases.
+- **Step 3 (if amplifier/Raman — most probable given subsea ILA context):** Plan XLA C-Band or SRA module replacement at vacILA1 slot 41-1, consistent with **Case C10929366** where XLA replacement (NTK552KA) cleared the HRSL alarm at a subsea ILA. Also check the OSC SFP at the relevant OSC port — faulty OSC SFPs caused persistent span loss in **Case C10926014**.
+- **Step 4:** After corrective action, verify HRSL alarm clearance and monitor for 24 hours to confirm stability (per **Case C10924936** methodology).
+
+> **Primary reference:** KA **000001636** — "OME 6500: High Received Span Loss alarm" — applicable to Release 9.1+ on MLA, SRA, LIM, ESAM modules.
+
+---
+
+*The Snowflake AI Intelligence uses generative AI and may produce errors. Users are responsible for validating all output; use is not approved for financial reporting related activities or other applications with low margin of error. In the event of erroneous or questionable output please contact mnewman@ciena.com*
+
+========================================
+Round-trip time: 3m 14.60s
+========================================
+
+Suggested follow-ups:
+  - Can you pull the full diagnostic narrative and resolution details for Case C10929366 (IMEWE subsea XLA replacement)? That's the closest analog to our subsea ILA scenario.
+  - Are there any other closed 6500 cases specifically for SOUTHERN CROSS PACIFIC CARRIAGE with recurring span loss or SRA issues that might indicate a site-specific pattern?
+  - Show me all 6500 cases in the last 12 months where the resolution involved XLA or SRA hardware replacement at an ILA node — what were the common RCA patterns and part numbers?

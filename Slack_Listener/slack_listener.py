@@ -28,14 +28,14 @@ if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
 # ==========================================
 CHANNEL_MAP = {
     "C0C4051R9SN": "di-test",
-    "C09GV7JFGV7": "cpo-broadband-team",
-    "C08PFDQM5M0": "active-outages-channel"
+    "C09GV7JFGV7": "cpo-broadband-team"
+    #"C08PFDQM5M0": "ert-active-outages-channel"
 }
 
 TARGET_CHANNEL_IDS = [
     "C0C4051R9SN",  # #di-test
     "C09GV7JFGV7"  # #cpo-broadband-team
-    # "C08PFDQM5M0" # #active-outages-channel
+    # "C08PFDQM5M0" # #ert-active-outages-channel
 ]
 
 app = App(token=SLACK_BOT_TOKEN)

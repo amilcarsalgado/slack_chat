@@ -1,0 +1,8 @@
+Compare all cases that have similar product type and technical conditions as C10917499 and suggest resolutions with reference to knowledge articles or cases.
+
+Respond in concise bullet points only as follows:
+
+1. Most likely root causes (excluding ruled-out items)
+2. Debugging steps/commands to try
+3. Known log/alarm signatures to look for
+4. Most likely resolution path
