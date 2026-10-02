@@ -1,0 +1,124 @@
+Now let me search for similar closed cases with the same product and related technical conditions.
+
+
+Analyzing **[Case C10925927](https://ciena.lightning.force.com/lightning/r/Case/500VR00000pbLxzYAE/view)** — **Navigator NCS (formerly MCP) 10.1.0 P01** — *RTRV-PM-ALL failed: timed out waiting for TL1 response* on ~30 6500 NEs after upgrading to NCS 10.1.
+
+I reviewed 76 closed Navigator NCS PM-related cases from the past 14 months. Below are consolidated findings in the requested format.
+
+---
+
+### 1. Most Likely Root Causes (Excluding Ruled-Out Items)
+
+- **TL1 and GNE session timeout values insufficient for 15-minute collection cycles** — The default `collection.tl1.timeout` (180s) and `collection.gne.session.timeout` (300s) are too short when querying a large number of 6500 NEs in quick succession. Increasing to 600 reduced constant failures but did not eliminate them; settling at 300 still showed intermittent gaps. This is consistent with findings in [Case C10895679](https://ciena.lightning.force.com/lightning/r/Case/500VR00000lzc8eYAA/view) and [Case C10865914](https://ciena.lightning.force.com/lightning/r/Case/500VR00000hvCwYYAU/view).
+  - *Ref KA*: [000037015](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka44z000000H0NlAAK/view) — *MCP: 6500 PMs collection failed with "io: read/write on closed pipe"*
+
+- **SSH session exhaustion on 6500 NEs (SARB/SROF errors)** — When Navigator queries multiple NEs via SFTP/TL1, concurrent sessions saturate the NE's SSH limit (default 3). SROF ("Status, Requested Operation Failed") and SARB ("Status, All Resources Busy") errors are seen in the current case narrative. This is the dominant root cause in [Case C10857410](https://ciena.lightning.force.com/lightning/r/Case/500VR00000gdQwxYAE/view), [Case C10863624](https://ciena.lightning.force.com/lightning/r/Case/500VR00000hYy2cYAC/view), and **C10865914**.
+  - *Ref KA*: [000046261](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000007ADxYAM/view) — *Navigator: Intermittent PM Collection Failures with 'All Resources Busy' (SARB) Error*
+
+- **Kafka `THRESHOLD-8` validation error ("OP must not be empty")** — This is a separate post-upgrade issue in the PM threshold Kafka consumer. It indicates corrupt or malformed threshold update messages after the 10.1 upgrade. While not yet RCA'd in the current case, [Case C10906017](https://ciena.lightning.force.com/lightning/r/Case/500VR00000n3m8HYAQ/view) (same software 10.1 P01) referenced Kafka and ClickHouse anomalies resolved through container restart/rescale.
+
+- **ClickHouse inter-node connectivity degradation** — The `ATTEMPT_TO_READ_AFTER_EOF` and `Broken pipe` errors in the ClickHouse error log (seen since July 2026) suggest intermittent ClickHouse cluster replication failures. This pattern matches [Case C10880585](https://ciena.lightning.force.com/lightning/r/Case/500VR00000k3iurYAA/view) and [Case C10905247](https://ciena.lightning.force.com/lightning/r/Case/500VR00000n3YP7YAM/view).
+  - *Ref KA*: [000046815](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000007cyDYAQ/view) — *Navigator: Resolving Unreachable ClickHouse Container Alarms*
+
+- **Ruled out**: Key exchange algorithm mismatch (no `ssh: no common algorithm` error in the logs); de-enrolled/LOA NE stale configs (some LOA NEs exist but are not the primary population); NE certificate expiry.
+
+---
+
+### 2. Debugging Steps/Commands to Try
+
+- **Verify current GCS PM timeout values:**
+  ```
+  curl -k -X GET 'https://<NAVIGATOR_IP>/gcs/api/v3/config?application=pm&instance=-&partition=hpm&name=collection.tl1.timeout' -H 'Authorization: Bearer <TOKEN>'
+  curl -k -X GET 'https://<NAVIGATOR_IP>/gcs/api/v3/config?application=pm&instance=-&partition=hpm&name=collection.gne.session.timeout' -H 'Authorization: Bearer <TOKEN>'
+  ```
+
+- **Check SSH session limits on affected 6500 NEs** (target: increase from default 3 to 18):
+  - Via Site Manager: Administration → Security → SSH Sessions → max sessions
+  - Via TL1: `RTRV-SYS-SECU::<AID>::;` and check max SSH sessions
+
+- **Check PM collection dashboard** for the specific NEs not collecting since 9/8 to differentiate between LOA, SROF, TL1 timeout, and io-pipe errors
+
+- **Inspect PM microservice logs** across all instances:
+  ```
+  sudo docker logs pm_0 --since 1h 2>&1 | grep -E "RTRV-PM-ALL|SARB|SROF|IDNV|closed pipe|session timed out|collectPmData"
+  ```
+
+- **Check ClickHouse cluster health:**
+  ```
+  clickhouse-client -q "SELECT * FROM system.replicas WHERE is_readonly = 1;"
+  clickhouse-client -q "SELECT date, count(*) FROM metrics_v3 GROUP BY date ORDER BY date DESC LIMIT 10;"
+  ```
+
+- **Check Kafka container health** and GCS connectivity:
+  ```
+  sudo docker logs kafka_0 --since 24h 2>&1 | grep -E "CFG-16|503|GCSRefreshException"
+  ```
+
+- **Verify SFTP connectivity from Navigator to affected NEs:**
+  ```
+  sftp -P 2555 ftpUser@<NE_SITE_IP>
+  ```
+
+---
+
+### 3. Known Log/Alarm Signatures to Look For
+
+- `HPM collectPmData call for <NE> was not successful: RTRV-PM-ALL failed: timed out waiting for TL1 response` — TL1 session timeout (msg_id: REST-5)
+- `Err: io: read/write on closed pipe` — SSH/SFTP session dropped prematurely (msg_id: PM-118)
+- `Err: session timed out` — GNE session timeout (msg_id: PM-118)
+- `Status[DENY], Err: <nil>, [::SROF:/*Status, Requested Operation Failed*/]` — NE resource contention
+- `Status[DENY], Err: <nil>, [::SARB:/*Status, All Resources Busy*/]` — SSH session limit reached on NE
+- `Status[DENY], Err: <nil>, [::IDNV:/*Input, Data Not Valid*/]` — FTP port/configuration issue
+- `Failed to validate update threshold message from Kafka: OP must not be empty` — Kafka PM threshold consumer error (msg_id: THRESHOLD-8)
+- `DB::Exception: Attempt to read after eof (ATTEMPT_TO_READ_AFTER_EOF)` — ClickHouse inter-node replication failure
+- `GCSRefreshException: Query to /gcs/api/v3/config...returned status 503` — GCS service unavailability during Kafka config refresh
+
+---
+
+### 4. Most Likely Resolution Path
+
+- **Step 1 — Increase SSH session limits on all affected 6500 NEs** from default 3 to 18. This is the single most impactful fix observed across 10+ similar cases ([000046261](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000007ADxYAM/view), **C10857410**, **C10895679**, **C10865914**).
+
+- **Step 2 — Set `collection.tl1.timeout` to 600** (currently 300, default 180). The 300 value was better than default but still marginal for large NE populations. The broader collection window at 600 was shown to eliminate constant failures in this case's own narrative.
+
+- **Step 3 — Verify `collection.gne.session.timeout` at 600** (currently 300, default 300). This ensures the GNE session stays alive long enough for the full RTRV-PM-ALL response.
+
+- **Step 4 — Address ClickHouse cluster errors** per KA [000046815](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000007cyDYAQ/view): check for read-only replicas in ZooKeeper and rescale ClickHouse if needed. The `ATTEMPT_TO_READ_AFTER_EOF` errors date to July 2026 (pre-dating the 10.1 upgrade) and may be an independent issue affecting PM data storage.
+
+- **Step 5 — Restart Kafka containers** to clear the `THRESHOLD-8` / `GCSRefreshException` errors. In **C10906017** (same 10.1 P01 software), restarting the affected microservices resolved similar Kafka/ClickHouse anomalies.
+
+- **Step 6 — For NEs with `IDNV` errors** (e.g., WRXHWLADHG1), verify FTP port configuration via the Configuration UI and test SFTP connectivity (`sftp -P <port> ftpUser@<siteip>`).
+
+- **Step 7 — For NEs not collecting since 9/8** (pre-upgrade), investigate whether those NEs were already impacted before the 10.1 upgrade and may need re-enrollment per **C10916262** resolution pattern.
+
+---
+
+**Key Knowledge Articles for Reference:**
+| KA # | Title |
+|---|---|
+| [000037015](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka44z000000H0NlAAK/view) | MCP: 6500 PMs collection failed with "io: read/write on closed pipe" |
+| [000046261](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000007ADxYAM/view) | Navigator: Intermittent PM Collection Failures with 'All Resources Busy' (SARB) Error |
+| [000045718](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000006bzNYAQ/view) | Navigator: "PM Collection Failure" Alarms Observed After Upgrade |
+| [000046815](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000007cyDYAQ/view) | Navigator: Resolving Unreachable ClickHouse Container Alarms |
+| [000005734](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000002ybBYAQ/view) | MCP: 15-min PM data is missing in MCP UI |
+
+---
+
+Would you like me to go deeper on any of these? Options:
+1. Full detail on a specific similar case
+2. Supporting similarity and knowledge evidence
+3. Show the next ranked similar cases (70+ additional matches available)
+4. Search for Zayo-specific repeat patterns
+
+---
+
+The Snowflake AI Intelligence uses generative AI and may product errors. Users are responsible for validating all output; use is not approved for financial reporting related activities or other applications with low margin of error. In the event of erroneous or questionable output please contact mnewman@ciena.com
+
+========================================
+Round-trip time: 4m 6.52s
+========================================
+
+Suggested follow-ups:
+  - Show me the full narrative and resolution details for Case C10895679 — the one with the same 'io: read/write on closed pipe' error and SSH session fix
+  - Are there any other open Navigator NCS cases for Zayo Group with similar PM collection or ClickHouse issues that might be related?
+  - How many Navigator NCS PM collection failure cases have been opened in the last 6 months, broken down by root cause category (RCA1)?

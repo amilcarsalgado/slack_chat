@@ -1,0 +1,73 @@
+**Analysis of [Case C10911250](https://ciena.lightning.force.com/lightning/r/Case/500VR00000nnfImYAI/view)** — Product: **6500** | Software: **REL1691Z.MS** | XLA AMP 1-2-8 Minimum Gain Reported
+
+Based on 20 similar closed 6500 Minimum Gain cases from the last 12 months and Knowledge Article [000006392](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka44z00000116l3AAA/view) ("OME 6500: Minimum Gain alarm") directly attached to this case:
+
+---
+
+### 1. Most Likely Root Causes (ruled-out items excluded)
+
+- **Incorrect GAINMODE provisioning (HIGH vs LOW)** — amplifier provisioned in HIGH gain mode when the 1P design file specifies LOW; at the floor of the HIGH range (11 dB), both alarm trigger conditions are met simultaneously *(confirmed root cause in C10911250; also seen in [C10881506](https://ciena.lightning.force.com/lightning/r/Case/500VR00000kAMCrYAO/view))*
+- **Span loss deviation from design** — actual span loss lower than design value due to fiber improvements, fiber events, or missing/incorrect pads, causing amplifier to operate at gain floor *(seen in [C10906771](https://ciena.lightning.force.com/lightning/r/Case/500VR00000nCtZEYA0/view), [C10928570](https://ciena.lightning.force.com/lightning/r/Case/500VR00000pq9d3YAA/view))*
+- **Transient condition after DOC optimization activity** — alarm triggered by recent re-optimization leaving the amplifier in an edge condition *(seen in [C10927614](https://ciena.lightning.force.com/lightning/r/Case/500VR00000piQPjYAM/view))*
+- **Missing or incorrect DSCM pads / pad degradation** — pads not deployed per design or physically degraded *(seen in [C10892847](https://ciena.lightning.force.com/lightning/r/Case/500VR00000ldUUbYAM/view), [C10894291](https://ciena.lightning.force.com/lightning/r/Case/500VR00000loDTdYAM/view))*
+- **System oversizing after span loss improvement** — fiber repair or cleaning reduced span loss below design, making the amplifier over-provisioned *(seen in [C10927812](https://ciena.lightning.force.com/lightning/r/Case/500VR00000pkWAoYAM/view))*
+
+---
+
+### 2. Debugging Steps / Commands to Try
+
+- **Verify GAINMODE against 1P design file** — confirm whether the AMP is provisioned HIGH or LOW and what the design specifies; this was the root cause in C10911250
+- **Record AMP baseline values**: `OPIN`, `OPOUT`, `Gain`, `Target Gain`, `Gain Mode`, `AMP Mode` on the alarmed facility
+- **Check NMCMON per-channel powers** on the XLA output port — compare each channel's actual peak power against the provisioned Target Peak Power; the alarm triggers when peak power overshoots target by >2 dB
+- **Check actual span loss vs design** — retrieve OSC span loss and compare to 1P design target; if actual span loss is lower, pad the span to the designed value
+- **Inspect upstream DOCs for faults** — the KA instructs to troubleshoot upstream DOC faults first before making provisioning changes
+- **Verify pad and DSCM deployment** — confirm all pads and DSCMs are in the designed locations and measure actual attenuation vs expected
+- **If MLA2v upstream** — reset the VOA on the MLA2v
+- **Check DOC status**: confirm DOC is IS / Optimal / Ready before any changes; if not, address DOC faults first
+
+---
+
+### 3. Known Log / Alarm Signatures to Look For
+
+- **Minimum Gain** (`MIN_GAIN`, DGNTYPE: `0400009148-2000-1583`) — requires BOTH conditions simultaneously:
+  - (a) Amplifier at minimum extended range gain setting for its mode (e.g., 11 dB is floor of HIGH range)
+  - (b) Peak channel power overshoots provisioned Target Peak Power by >2 dB
+- **Domain Optical Controller Disabled** — raised when DOC is placed OOS for maintenance
+- **DOC Fault Detected / Invalid Photonic Domain** — indicates span loss or fibering issues that will block channel re-adds
+- **High Received Span Loss** / **High Fiber Loss** — may indicate span degradation affecting amplifier gain requirements
+- **Channel Degrade** (`SIGNAL_DEGRADE_OCH`) — secondary indicator of optical path issues
+- **OSRP Line Operationally Blocked** — may prevent non-permanent SNC recovery if the amplifier is taken OOS
+- **SNC Unavailable** — risk if non-permanent SNCs traverse the affected AMP and DOC Pre-Check fails in adjacent domains during MW
+
+---
+
+### 4. Most Likely Resolution Path
+
+- **Primary (provisioning mismatch):** Change **GAINMODE from HIGH to LOW** during a scheduled Maintenance Window *(proven resolution in C10911250)*:
+  1. Set both local and remote DOCs to OOS
+  2. Place AMP into OOS-MA
+  3. Edit GAINMODE to LOW (if rejected, change AMP Mode from GainClamp → Gain first, change GAINMODE, then revert AMP Mode)
+  4. Return AMP to IS, wait 60 seconds, verify Minimum Gain alarm clears
+  5. Return both DOCs to IS and perform re-optimization
+  6. Verify all channel powers and Pre-FEC BER within threshold
+
+- **Alternative (transient post-optimization):** Perform an **SP warm restart** — this cleared the alarm in **C10927614** where recent optimization activity caused a transient condition
+
+- **Alternative (span loss drift):** **Correct span loss** by adding/adjusting pads or replacing DSCMs to match the designed span loss value — resolved in **C10928570**, **C10892847**, **C10906771**
+
+- **Alternative (self-resolving):** In some cases ([C10931125](https://ciena.lightning.force.com/lightning/r/Case/500VR00000qBQ1SYAW/view), [C10887414](https://ciena.lightning.force.com/lightning/r/Case/500VR00000kw1VvYAI/view)), the alarm cleared after toggling the SRA facility or after gain was verified to have no major deltas — DOC re-optimization or SNC path changes can also auto-resolve the condition
+
+**⚠ Critical pre-condition:** Before scheduling any MW that takes the AMP OOS, verify that no non-permanent SNCs traversing the path have DOC Pre-Check failures in adjacent domains (DOC faults, High Span Loss). Failure to do so risks SNC channels being deleted and not re-added, resulting in a larger traffic-impacting incident — this was explicitly called out and managed in C10911250.
+
+---
+
+The Snowflake AI Intelligence uses generative AI and may produce errors. Users are responsible for validating all output; use is not approved for financial reporting related activities or other applications with low margin of error. In the event of erroneous or questionable output please contact mnewman@ciena.com
+
+========================================
+Round-trip time: 4m 39.45s
+========================================
+
+Suggested follow-ups:
+  - Show me the full diagnostic pathway and resolution details for case C10927614 where the Minimum Gain alarm was cleared by an SP restart after optimization activity
+  - Are there any other open or recent 6500 Minimum Gain cases for DEUTSCHE TELEKOM AG that may indicate a recurring pattern in their network?
+  - Which 6500 amplifier types (XLA, MLA, MLA2v, LIM, SRA) have the highest frequency of Minimum Gain alarms in the last 12 months?
