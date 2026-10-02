@@ -1,0 +1,74 @@
+Analyzing [Case C10917499](https://ciena.lightning.force.com/lightning/r/Case/500VR00000oLBmuYAG/view) — **Navigator NCS (formerly MCP)** upgrade from 8.2 P01 → 9.2, single host (no GR), for SOUTHERN COMPANY.
+
+---
+
+**1. Most Likely Root Causes** (excluding ruled-out items)
+
+- **NSI container SBIS connection failure** — The `nsi_15.2.56_0` hook upgrade stall (UPSTATE-16 loop) is a documented condition where the SouthBound Interconnect Service (SBIS) connections for the NSI container are not correctly established, preventing upgrade progression. *(Source: KA [000046427](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000007J17YAE/view), linked to [Case C10873942](https://ciena.lightning.force.com/lightning/r/Case/500VR00000oLBmuYAG/view))*
+- **OS-level package conflicts (containerd.io vs runc)** — The host has `containerd.io-1.7.29` installed (from Docker CE), which conflicts with all RHEL 8 `runc` packages. This prevents `yum groupinstall "Server"` from completing and introduces post-upgrade instability. The `ciena_bundle-2025.51.0` package chain depends on `docker-ce 28.5.2` → `containerd.io >= 1.7.27`, creating a circular conflict.
+- **Deprecated sshd_config directive (`UsePrivilegeSeparation`)** — RHEL 8.10 no longer supports `UsePrivilegeSeparation`, causing `checkOSversion --verbose` to report configuration mismatches and downstream alarms.
+- **Incomplete/missing microservices after failed redeploy** — Post-redeploy, Nagios showed fewer containers than expected vs. a lab baseline, indicating an incomplete solution state.
+
+---
+
+**2. Debugging Steps / Commands to Try**
+
+- **Check NSI SBIS connections** (per **KA 000046427**):
+  - `sudo solman` → `api containers nsi_15.2.56_0 sbis get` — verify all expected SBIS providers (licensing-feature, esinternal, geored-state, ractrl, kafka, gcs, grafana, solutionmanager, cassandra) are present
+- **Replay SBIS hooks** if any connection is missing:
+  - `api containers nsi_15.2.56_0 southbound_hook_replay post`
+- **Verify OS readiness**:
+  - `checkOSversion --verbose` — ensure all sections report `[Complete]`
+  - `sudo yum grouplist` — confirm "Server" group is in "Installed Environment Groups"
+- **Resolve sshd_config deprecation**:
+  - Comment out `UsePrivilegeSeparation yes` in `/etc/ssh/sshd_config` → `systemctl restart sshd`
+- **Address containerd/runc conflict**: Consider running `yum groupinstall "Server" --allowerasing --nobest` or resolving the Docker CE module stream conflict before proceeding
+- **Inspect Nagios health**: After any remediation, wait 30 min and verify all alarms clear in Nagios UI
+- **If upgrade cannot recover**: Perform clean reinstall sequence:
+  1. `./bpi --uninstall`
+  2. `./bpi --utility playbooks/docker-clean.yml`
+  3. Fresh install of Navigator 10.1 per Eng. Guide
+
+---
+
+**3. Known Log / Alarm Signatures to Look For**
+
+- **Upgrade log** (`/opt/ciena/bp2/upgrade_3.0.60_0/log`):
+  - `(UPSTATE-16) Waiting for 32 seconds before retrying to execute hook upgrade for container nsi_` — confirms NSI SBIS stall
+- **Nagios UI**:
+  - Critical/Warning alerts on NSI container(s) referencing SBIS connection issues
+  - Multiple container health warnings post-redeploy (fewer microservices than expected)
+- **OS-level**:
+  - `Deprecated option UsePrivilegeSeparation` from `checkOSversion`
+  - `containerd.io conflicts with runc` from `yum groupinstall "Server"` output
+- **bpfirewall errors** — observed in analogous cases (**C10940395**, **C10931011**) where bpfirewall blocked auth tokens during upgrade/GR steps
+
+---
+
+**4. Most Likely Resolution Path**
+
+- **Primary path (if upgrade can be recovered)**: Follow [000046427](https://ciena.lightning.force.com/lightning/r/KnowledgeArticle__kav/ka4VR0000007J17YAE/view) — check NSI SBIS connections via `solman`, run `southbound_hook_replay`, then resume the upgrade. This has resolved the identical UPSTATE-16 NSI hang in **Case C10873942**.
+- **If SBIS replay does not unblock**: Given the compounded OS-level issues (runc conflicts, sshd deprecation, missing Server group packages), the cleanest resolution — as already recommended by the assigned engineer — is:
+  1. Uninstall MCP: `./bpi --uninstall`
+  2. Docker clean: `./bpi --utility playbooks/docker-clean.yml`
+  3. Resolve the containerd.io/runc package conflict (may require removing Docker CE from a conflicting repo, or using `--allowerasing`)
+  4. Fix `sshd_config` deprecation and confirm `checkOSversion --verbose` passes fully
+  5. Install Navigator 10.1 fresh (skipping the intermediate 9.2 step entirely, since the ultimate target is 10.1)
+- **Supporting evidence**: In [Case C10940395](https://ciena.lightning.force.com/lightning/r/Case/500VR00000oLBmuYAG/view) (Xcel, 9.2 upgrade), restarting `bpfirewall` on both servers resolved post-upgrade authentication issues. In [Case C10932437](https://ciena.lightning.force.com/lightning/r/Case/500VR00000oLBmuYAG/view) (9.0 P02), third-party security software blocking system scripts was the root cause — analogous to how the containerd/runc conflict is blocking OS-level package operations here.
+
+---
+
+*Note: This case is still In Progress. The above recommendations are evidence-based pathways observed in historical cases and the documented KA. They are not definitive root cause determinations.*
+
+---
+
+The Snowflake AI Intelligence uses generative AI and may product errors. Users are responsible for validating all output; use is not approved for financial reporting related activities or other applications with low margin of error. In the event of erroneous or questionable output please contact mnewman@ciena.com
+
+========================================
+Round-trip time: 3m 1.93s
+========================================
+
+Suggested follow-ups:
+  - Show me the full detail and resolution narrative for case C10873942 — the originating case linked to KA 000046427 — to see how they resolved the NSI SBIS hang.
+  - How many Navigator NCS upgrade-related cases have been opened in the last 6 months, and what is the most common root cause category?
+  - Are there any other closed Navigator NCS cases from SOUTHERN COMPANY in the last 12 months that might reveal recurring environment-specific patterns?
